@@ -12,3 +12,5 @@ Led lamp with web interface
 
 В данной прошивке режим работы ESP_MODE 1 (с роутером) или ESP_MODE 0 (без (точка доступа)) .
 В любой момент его можно будет поменять, либо он сам изменится.
+
+Обсуждение исходного и этого проэктов тут: https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/page-205#post-73929
