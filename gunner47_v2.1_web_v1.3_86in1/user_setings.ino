@@ -8,6 +8,7 @@ void User_setings (){
  //HTTP.on("/User_set", handle_User_set); // Сохранение random_on, time_always, button_on и favorit в EEPROM (Файл)
  HTTP.on("/ESP_mode", handle_ESP_mode); // Установка ESP Mode
  HTTP.on("/eff_reset", handle_eff_reset);
+ HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
  HTTP.on("/time_always", handle_time_always);     // Выводить или нет время бегущей строкой(если задано) на не активной лампе
  HTTP.on("/timeZone", handle_time_zone);    // Установка времянной зоны по запросу вида http://192.168.0.101/timeZone?timeZone=3
@@ -86,6 +87,14 @@ void handle_eff_reset() {
     #endif
   HTTP.send(200, "text/plain", "OK");
  }
+
+void handle_Power ()  {
+	jsonWrite(configSetup, "Power", HTTP.arg("Power").toInt());
+	saveConfig(); 
+	ONflag = jsonReadtoInt(configSetup, "Power");
+	changePower();
+	HTTP.send(200, "text/plain", "OK");
+}	
 
 void handle_summer_time() {
 	jsonWrite(configSetup, "Summer_Time", HTTP.arg("Summer_Time").toInt()); 
