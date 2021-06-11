@@ -13,5 +13,6 @@
 "print_time":0,
 "button_on":1,
 "TimeOut":60,
-"time_always":0
+"time_always":0,
+"Power":0
 }
