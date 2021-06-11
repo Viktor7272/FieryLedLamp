@@ -489,6 +489,8 @@ void setup()
   buttonEnabled = jsonReadtoInt(configSetup, "button_on");
   ESP_CONN_TIMEOUT = jsonReadtoInt(configSetup, "TimeOut");
   time_always = jsonReadtoInt(configSetup, "time_always");
+  jsonWrite(configSetup, "Power", ONflag);
+  saveConfig(); 	
   
   winterTime.offset = jsonReadtoInt(configSetup, "timezone") * 60;
   summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") *60;
