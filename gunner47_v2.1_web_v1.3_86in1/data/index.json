@@ -24,8 +24,6 @@
 "type": "checkbox",
 "design":"one big-size",
 "name":"Power",
-"title": "ON/OFF",
-"style":"font-size:20px",
 "state": "{{Power}}",
 "action":"Power?Power=[[Power]]"
 } ,
