@@ -68,7 +68,7 @@
    "title":"Сеть",
    "name":"ssid",
    "state": "{{ssid}}",
-   "pattern": "[0-9a-zA-Zа-яА-Я.\\-+ ]{1,31}"
+   "pattern": ".{1,31}"
   },
       {
    "type": "h4",
