@@ -29,6 +29,7 @@ void buttonTick()
     else
     {
       ONflag = !ONflag;
+	  jsonWrite(configSetup, "Power", ONflag);
       changePower();
     }
     settChanged = true;
@@ -128,6 +129,7 @@ void buttonTick()
     if (otaManager.RequestOtaUpdate())
     {
       ONflag = true;
+	  jsonWrite(configSetup, "Power", ONflag);
       currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
       //FastLED.clear();
       //delay(1);
@@ -263,6 +265,7 @@ if (touch.isStep())
     Button_Holding = true;
     currentMode = EFF_WHITE_COLOR;
     ONflag = true;
+	jsonWrite(configSetup, "Power", ONflag);
     changePower();
     settChanged = true;
     eepromTimeout = millis();

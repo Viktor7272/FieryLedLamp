@@ -1,6 +1,6 @@
 {
  "configs": [
-   "/config.setup.json"
+   "config.setup.json"
  ],
  "title": [{
   "type":"text",
@@ -138,6 +138,28 @@
    "name":"times1",
    "title": "На устройстве сейчас",
    "state":"{{time}}"
+  },
+  {
+   "type": "hr"
+  },
+  {
+   "type": "h4",
+   "title": "Адрес NTP сервера"
+  },
+ {
+   "type": "input",
+   "title": "Адрес NTP",
+   "name":"ntp_addr",
+   "state": "{{ntp}}",
+   "style": "width:40%;display:inline",
+   "pattern": "[0-9a-zA-Z_. ]{1,31}"
+  },
+  {
+   "type": "button",
+   "title": "Сохранить",
+   "action": "ntp?ntp=[[ntp_addr]]",
+   "class": "btn btn-block btn-success",
+   "style": "width:60%;display:inline"
   },
   {
    "type": "hr"

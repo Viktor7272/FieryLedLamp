@@ -424,7 +424,7 @@ uint32_t FavoritesManager::nextModeAt = 0UL;
 
 //bool CaptivePortalManager::captivePortalCalled = false;
 
-char* TextTicker;
+char TextTicker [44];
 int Painting = 0; CRGB DriwingColor = CRGB(255, 255, 255);
 
 uint8_t espMode ;
@@ -437,7 +437,7 @@ bool connect = false;
 uint32_t lastResolveTryMoment = 0xFFFFFFFFUL;
 uint8_t ESP_CONN_TIMEOUT;
 uint8_t PRINT_TIME ; 
-String configSetup = "{}";
+
 
 
 
@@ -468,13 +468,13 @@ void setup()
   LOG.print(F("\nСтарт файловой системы\n"));
   FS_init();  //Запускаем файловую систему
   LOG.print(F("Чтение файла конфигурации\n"));
-  configSetup = readFile("config.json", 512);   
+  configSetup = readFile("config.json", 768);   
   LOG.println(configSetup);
   //Настраиваем и запускаем SSDP интерфейс
   LOG.print(F("Старт SSDP\n"));
   SSDP_init();
   //Настраиваем и запускаем HTTP интерфейс
-  Serial.print("Старт WebServer\n");
+  LOG.print (F("Старт WebServer\n"));
   HTTP_init();
 
   
@@ -489,13 +489,25 @@ void setup()
   buttonEnabled = jsonReadtoInt(configSetup, "button_on");
   ESP_CONN_TIMEOUT = jsonReadtoInt(configSetup, "TimeOut");
   time_always = jsonReadtoInt(configSetup, "time_always");
+  (jsonRead(configSetup, "run_text")).toCharArray (TextTicker, (jsonRead(configSetup, "run_text")).length()+1);
+  NIGHT_HOURS_START = 60U * jsonReadtoInt(configSetup, "night_time");
+  NIGHT_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "night_bright");
+  NIGHT_HOURS_STOP = 60U * jsonReadtoInt(configSetup, "day_time");
+  DAY_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "day_bright");
+  DONT_TURN_ON_AFTER_SHUTDOWN = jsonReadtoInt(configSetup, "effect_always"); 
+  AUTOMATIC_OFF_TIME = (5 * 60UL * 60UL * 1000UL) * ( uint32_t )(jsonReadtoInt(configSetup, "timer5h"));
+  #ifdef USE_NTP
+  (jsonRead(configSetup, "ntp")).toCharArray (NTP_ADDRESS, (jsonRead(configSetup, "ntp")).length()+1);
+  #endif
   jsonWrite(configSetup, "Power", ONflag);
-  saveConfig(); 	
-  
+  //aveConfig(); 
+  Serial.print ("TextTicker = ");
+  Serial.println (TextTicker);
+  #ifdef USE_NTP
   winterTime.offset = jsonReadtoInt(configSetup, "timezone") * 60;
   summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") *60;
   localTimeZone.setRules (summerTime, winterTime);
-  
+  #endif
 
 
   // TELNET
@@ -514,7 +526,7 @@ void setup()
   #if defined(ESP_USE_BUTTON)
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
-  touch.setDebounce(BUTTON_SET_DEBOUNCE);	
+  touch.setDebounce(BUTTON_SET_DEBOUNCE);
     #if ESP_RESET_ON_START
     delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
     if (digitalRead(BTN_PIN))
@@ -653,7 +665,7 @@ void setup()
   changePower();
   loadingFlag = true;
 
-  TextTicker = RUNNING_TEXT_DEFAULT;
+  //TextTicker = RUNNING_TEXT_DEFAULT;
   delay (100);
   
   my_timer=millis();

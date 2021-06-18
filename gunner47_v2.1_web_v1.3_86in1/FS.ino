@@ -129,12 +129,14 @@ void handleFileList() {
     output += "{\"type\":\"";
     output += (isDir) ? "dir" : "file";
     output += "\",\"name\":\"";
-    output += String(entry.name()).substring(1);
+    #if defined (USE_LittleFS)
+      output += String(entry.name()).substring(0);
+    #else
+      output += String(entry.name()).substring(1);
+    #endif
     output += "\"}";
     entry.close();
   }
   output += "]";
   HTTP.send(200, "text/json", output);
 }
-
-
