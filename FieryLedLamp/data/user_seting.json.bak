@@ -64,7 +64,7 @@
    "name": "run_text",
    "state": "{{run_text}}",
    "style": "width:50%;display:inline",
-   "pattern": ".{1,42}"
+   "pattern": ".{1,43}"
   },
   {
    "type": "button",
