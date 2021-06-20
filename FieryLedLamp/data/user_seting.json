@@ -64,7 +64,7 @@
    "name": "run_text",
    "state": "{{run_text}}",
    "style": "width:50%;display:inline",
-   "pattern": ".{1,43}"
+   "pattern": ".{1,42}"
   },
   {
    "type": "button",
@@ -107,53 +107,53 @@
   {
    "type": "h4",
    "title": "Час перехода на ночное время 0-23",
-   "style": "width:85%;display:nextline;float:left;"
+   "style": "display:nextline;float:left;"
   },
   {
    "type": "input",
    "title": "Ночное время",
    "name": "night_time",
    "state": "{{night_time}}",
-   "style": "width:15%;display:nextline;",
+   "style": "display:nextline;",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "h4",
    "title": "Яркость в ночное время 1-255",
-   "style": "width:85%;display:nextline;float:left;"
+   "style": "display:nextline;float:left;"
   },
   {
    "type": "input",
    "title": "Ночная яркость",
    "name": "night_bright",
    "state": "{{night_bright}}",
-   "style": "width:15%;display:nextline;",
+   "style": "display:nextline;",
    "pattern": "[0-9]{1,3}"
   },
   {
    "type": "h4",
    "title": "Час перехода на дневное время 0-23",
-   "style": "width:85%;display:nextline;float:left;"
+   "style": "display:nextline;float:left;"
   },
   {
    "type": "input",
    "title": "Дневное время",
    "name": "day_time",
    "state": "{{day_time}}",
-   "style": "width:15%;display:nextline;",
+   "style": "display:nextline;",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "h4",
    "title": "Яркость в дневное время 1-255",
-   "style": "width:85%;display:nextline;float:left;"
+   "style": "display:nextline;float:left;"
   },
   {
    "type": "input",
    "title": "Дневная яркость",
    "name": "day_bright",
    "state": "{{day_bright}}",
-   "style": "width:15%;display:nextline;",
+   "style": "display:nextline;",
    "pattern": "[0-9]{1,3}"
   },
   {
