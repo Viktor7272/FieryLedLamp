@@ -6,7 +6,7 @@
 //  В любом случае ВНИМАТЕЛЬНО прочитайте файл ПРОЧТИ МЕНЯ!!!.txt из этого архива.
 //
 //  решение проблем можно поискать тут под спойлерами:
-//  https://community.alexgyver.ru/goto/post?id=73929
+//  https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/page-205#post-73929
 // ==================================================================
 
 // Ссылка для менеджера плат:
@@ -17,9 +17,7 @@
   Скетч к проекту "Многофункциональный RGB светильник"
   Страница проекта (схемы, описания): https://alexgyver.ru/GyverLamp/
   Исходники авторской (старой) прошивки на GitHub: https://github.com/AlexGyver/GyverLamp/
-  ==========================================================================================
-  Исходники новой версии: https://community.alexgyver.ru/goto/post?id=73929
-  ==========================================================================================
+  исходники новой версии: https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/post-73929
   Автор идеи и первой реализации: AlexGyver, AlexGyver Technologies, 2019
   https://AlexGyver.ru/
 */
