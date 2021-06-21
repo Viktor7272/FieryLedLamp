@@ -63,6 +63,7 @@ void buttonTick()
     else
       if (++currentMode >= MODE_AMOUNT) currentMode = 0;
     
+	jsonWrite(configSetup, "eff_sel", currentMode);
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
@@ -100,6 +101,7 @@ void buttonTick()
 	else 
 	  if (--currentMode >= MODE_AMOUNT) currentMode = MODE_AMOUNT - 1;
     
+	jsonWrite(configSetup, "eff_sel", currentMode);
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
@@ -131,6 +133,7 @@ void buttonTick()
       ONflag = true;
 	  jsonWrite(configSetup, "Power", ONflag);
       currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+	  jsonWrite(configSetup, "eff_sel", currentMode);
       //FastLED.clear();
       //delay(1);
       changePower();
@@ -264,6 +267,7 @@ if (touch.isStep())
   if (!Button_Holding) {
     Button_Holding = true;
     currentMode = EFF_WHITE_COLOR;
+	jsonWrite(configSetup, "eff_sel", currentMode);
     ONflag = true;
 	jsonWrite(configSetup, "Power", ONflag);
     changePower();

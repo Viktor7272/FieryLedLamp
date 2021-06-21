@@ -35,6 +35,7 @@
   {
    "type": "button",
    "title": "<<< <<<",
+   "response": "[[eff_sel]]",
    "action": "eff?ef=0",
    "class": "btn btn-block btn-primary",
    "style": "width:20%;display:inline"
@@ -50,6 +51,7 @@
   {
    "type": "button",
    "title": ">>> >>>",
+   "response": "[[eff_sel]]",
    "action": "eff?eff=1",
    "class": "btn btn-block btn-primary",
    "style": "width:20%;display:inline"

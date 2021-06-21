@@ -99,6 +99,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       currentMode = (uint8_t)atoi(buff);
       updateSets();
       sendCurrent(inputBuffer);
+	  jsonWrite(configSetup, "eff_sel", currentMode);
       //FastLED.clear();
       //delay(1);
 
@@ -340,6 +341,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
           delay(1);
           ONflag = true;
 		  jsonWrite(configSetup, "Power", ONflag);
+		  jsonWrite(configSetup, "eff_sel", currentMode);
           changePower();
         }
         else

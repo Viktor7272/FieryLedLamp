@@ -111,6 +111,7 @@ class FavoritesManager
       if (millis() >= nextModeAt)
       {
         *currentMode = getNextFavoriteMode(currentMode);
+		jsonWrite(configSetup, "eff_sel", *currentMode);
         *loadingFlag = true;
         nextModeAt = getNextTime();
 

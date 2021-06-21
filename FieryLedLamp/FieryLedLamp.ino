@@ -151,7 +151,7 @@ bool dawnFlag = false;
 uint32_t thisTime;
 bool manualOff = false;
 
-uint8_t currentMode = 0;
+uint8_t currentMode = 3;
 bool loadingFlag = true;
 bool ONflag = false;
 uint32_t eepromTimeout;
@@ -250,7 +250,8 @@ void setup()
   (jsonRead(configSetup, "ntp")).toCharArray (NTP_ADDRESS, (jsonRead(configSetup, "ntp")).length()+1);
   #endif
   jsonWrite(configSetup, "Power", ONflag);
-  //aveConfig(); 
+  jsonWrite(configSetup, "eff_sel", currentMode);
+  //saveConfig(); 
   Serial.print ("TextTicker = ");
   Serial.println (TextTicker);
   #ifdef USE_NTP

@@ -192,6 +192,7 @@ void processParams(char *prefix, const char *paramValue)
       otaManager.RequestOtaUpdate();
       //{
         currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+		jsonWrite(configSetup, "eff_sel", currentMode);
         FastLED.clear();
         delay(1);
         ONflag = true;

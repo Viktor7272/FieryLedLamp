@@ -145,6 +145,7 @@ class EepromManager
 
       *dawnMode = EEPROM.read(EEPROM_DAWN_MODE_ADDRESS);
       *currentMode = EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS);
+	  jsonWrite(configSetup, "eff_sel", *currentMode);
   //    if (*buttonEnabled) *buttonEnabled = EEPROM.read(EEPROM_ESP_BUTTON_ENABLED_ADDRESS);
     }
 

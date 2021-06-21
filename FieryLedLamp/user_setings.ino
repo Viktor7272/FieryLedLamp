@@ -9,11 +9,13 @@ void User_setings (){
  HTTP.on("/ESP_mode", handle_ESP_mode); // Установка ESP Mode
  HTTP.on("/eff_reset", handle_eff_reset);  //сброс настроек эффектов по умолчанию
  
- HTTP.on("/run_text", handle_run_text);  //
- HTTP.on("/night_time", handle_night_time);  //
- HTTP.on("/effect_always", handle_effect_always);  //
- HTTP.on("/timer5h", handle_timer5h);  //
- HTTP.on("/ntp", handle_ntp);  //
+ HTTP.on("/run_text", handle_run_text);  // Текст для бегущей строки
+ HTTP.on("/night_time", handle_night_time);  // Параметры вывода времени бегущей строкой на ВЫключенной лампе (яркость и время день,ночь) 
+ HTTP.on("/effect_always", handle_effect_always);  // Не возобновлять работу эффектов
+ HTTP.on("/timer5h", handle_timer5h);  // Автовыключение через 5 часов
+ HTTP.on("/ntp", handle_ntp);  // Адрес NTP сервера
+ HTTP.on("/eff_sel", handle_eff_sel);  // Выбор эффекта из списка
+ HTTP.on("/eff", handle_eff);  // Следующий / Предыдущий
  
  HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
@@ -138,9 +140,78 @@ void handle_ntp ()  {
 	//ESP.restart();
 }
 
+void handle_eff_sel () {
+	jsonWrite(configSetup, "eff_sel", HTTP.arg("eff_sel").toInt());
+	currentMode = jsonReadtoInt(configSetup, "eff_sel");
+    FastLED.setBrightness(modes[currentMode].Brightness);
+    loadingFlag = true;
+    settChanged = true;
+    eepromTimeout = millis();
+      if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+    #if (USE_MQTT)
+    if (espMode == 1U)
+    {
+      MqttManager::needToPublish = true;
+    }
+    #endif
+    #ifdef USE_BLYNK
+    updateRemoteBlynkParams();
+    #endif
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_eff () {
+  String state = "{}";
+	jsonWrite(configSetup, "eff", HTTP.arg("eff").toInt());
+	if (jsonReadtoInt(configSetup, "eff"))  {
+	  if (++currentMode >= MODE_AMOUNT) currentMode = 0;
+	  jsonWrite(configSetup, "eff_sel", currentMode);
+      FastLED.setBrightness(modes[currentMode].Brightness);
+      loadingFlag = true;
+      settChanged = true;
+      eepromTimeout = millis();
+      if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+      #if (USE_MQTT)
+       if (espMode == 1U)
+      {
+      MqttManager::needToPublish = true;
+      }
+      #endif
+      #ifdef USE_BLYNK
+      updateRemoteBlynkParams();
+      #endif
+	}
+	else  {
+		if (--currentMode >= MODE_AMOUNT) currentMode = MODE_AMOUNT - 1;
+    
+		jsonWrite(configSetup, "eff_sel", currentMode);
+		FastLED.setBrightness(modes[currentMode].Brightness);
+		loadingFlag = true;
+		settChanged = true;
+		eepromTimeout = millis();
+		if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+		#if (USE_MQTT)
+		if (espMode == 1U)
+		{
+		MqttManager::needToPublish = true;
+		}
+		#endif
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+	}
+  //state = jsonWrite(state, "state", "{{eff_sel}}");
+  //state = jsonWrite(state, "class", "btn btn-block btn-lg btn-info");
+	  HTTP.send(200, "text/plain", "OK"); //HTTP.send(200, "application/json", state); //HTTP.send(200, "{\"state\":\"{{eff_sel}}\"}", "OK");
+}
+
+
 void handle_Power ()  {
 	jsonWrite(configSetup, "Power", HTTP.arg("Power").toInt());
-	saveConfig(); 
+	//saveConfig(); 
 	ONflag = jsonReadtoInt(configSetup, "Power");
 	changePower();
 	HTTP.send(200, "text/plain", "OK");
