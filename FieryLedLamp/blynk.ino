@@ -185,7 +185,10 @@ void processParams(char *prefix, const char *paramValue)
     // добавляем включение прошивки по воздуху
       modes[currentMode].Brightness = 10U;
       modes[currentMode].Speed      = 99U;
-      modes[currentMode].Scale      = 38U;        
+      modes[currentMode].Scale      = 38U;
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
       otaManager.RequestOtaUpdate();
       delay(70);
       //if (otaManager.RequestOtaUpdate()) по идее, нужен положительный ответ от менеджера, но он не поступает с первого раза...

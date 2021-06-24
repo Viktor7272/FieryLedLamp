@@ -62,7 +62,7 @@
   {
    "type": "range",
    "name": "br",
-   "title": "Яркость  {{br}}",
+   "title": "Яркость",
    "state": "{{br}}",
    "pattern": "min=1 max=255 step=1",
    "action": "br?br=[[br]]"
@@ -70,7 +70,7 @@
   {
    "type": "range",
    "name": "sp",
-   "title": "Скорость  {{sp}}",
+   "title": "Скорость",
    "state": "{{sp}}",
    "pattern": "min=1 max=255 step=1",
    "action": "sp?sp=[[sp]]"
@@ -78,7 +78,7 @@
   {
    "type": "range",
    "name": "sc",
-   "title": "Масштаб / Цвет  {{sc}}",
+   "title": "Масштаб / Цвет",
    "state": "{{sc}}",
    "pattern": "min=1 max=100 step=1",
    "action": "sc?sc=[[sc]]"
@@ -100,10 +100,7 @@
     "class": "btn btn-block btn-success",
  "style": "width:70%;float:right;"
   }, 
-   {
-"type":"hr"}  ,
-  {
-   "type": "hr"
-  }
+
+   {"type":"hr"}
  ]
 }

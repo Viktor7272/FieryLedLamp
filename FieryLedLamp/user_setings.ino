@@ -16,6 +16,9 @@ void User_setings (){
  HTTP.on("/ntp", handle_ntp);  // Адрес NTP сервера
  HTTP.on("/eff_sel", handle_eff_sel);  // Выбор эффекта из списка
  HTTP.on("/eff", handle_eff);  // Следующий / Предыдущий
+ HTTP.on("/br", handle_br);  // Яркость
+ HTTP.on("/sp", handle_sp);  // Скорость
+ HTTP.on("/sc", handle_sc);  // Масштаб / Цвет
  
  HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
@@ -143,6 +146,9 @@ void handle_ntp ()  {
 void handle_eff_sel () {
 	jsonWrite(configSetup, "eff_sel", HTTP.arg("eff_sel").toInt());
 	currentMode = jsonReadtoInt(configSetup, "eff_sel");
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
@@ -167,6 +173,9 @@ void handle_eff () {
 	if (jsonReadtoInt(configSetup, "eff"))  {
 	  if (++currentMode >= MODE_AMOUNT) currentMode = 0;
 	  jsonWrite(configSetup, "eff_sel", currentMode);
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
       FastLED.setBrightness(modes[currentMode].Brightness);
       loadingFlag = true;
       settChanged = true;
@@ -187,6 +196,9 @@ void handle_eff () {
 		if (--currentMode >= MODE_AMOUNT) currentMode = MODE_AMOUNT - 1;
     
 		jsonWrite(configSetup, "eff_sel", currentMode);
+		jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
 		FastLED.setBrightness(modes[currentMode].Brightness);
 		loadingFlag = true;
 		settChanged = true;
@@ -208,6 +220,35 @@ void handle_eff () {
 	  HTTP.send(200, "text/plain", "OK"); //HTTP.send(200, "application/json", state); //HTTP.send(200, "{\"state\":\"{{eff_sel}}\"}", "OK");
 }
 
+void handle_br ()  {
+	jsonWrite(configSetup, "br", HTTP.arg("br").toInt());
+	modes[currentMode].Brightness = jsonReadtoInt(configSetup, "br");
+	FastLED.setBrightness(modes[currentMode].Brightness);
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
+    #endif
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_sp ()  {
+	jsonWrite(configSetup, "sp", HTTP.arg("sp").toInt());
+	modes[currentMode].Speed = jsonReadtoInt(configSetup, "sp");
+	loadingFlag = true;  // Перезапуск Эффекта
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
+    #endif
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_sc ()  {
+	jsonWrite(configSetup, "sc", HTTP.arg("sc").toInt());
+	modes[currentMode].Scale = jsonReadtoInt(configSetup, "sc");
+	loadingFlag = true;  // Перезапуск Эффекта
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение Мфыштаба / Цвета: %d\n"), modes[currentMode].Scale);
+    #endif
+	HTTP.send(200, "text/plain", "OK");
+}
 
 void handle_Power ()  {
 	jsonWrite(configSetup, "Power", HTTP.arg("Power").toInt());

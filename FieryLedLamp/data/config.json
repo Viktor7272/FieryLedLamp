@@ -23,5 +23,8 @@
 "timer5h":0,
 "Power":0,
 "eff_sel":0,
-"eff":0
+"eff":0,
+"br":127,
+"sp":127,
+"sc":50
 }
