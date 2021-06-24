@@ -142,7 +142,7 @@ char packetBuffer[MAX_UDP_BUFFER_SIZE];                     // buffer to hold in
 char inputBuffer[MAX_UDP_BUFFER_SIZE];
 static const uint8_t maxDim = max(WIDTH, HEIGHT);
 
-ModeType modes[MODE_AMOUNT];
+
 AlarmType alarms[7];
 
 static const uint8_t dawnOffsets[] PROGMEM = {5, 10, 15, 20, 25, 30, 40, 50, 60};   // опции для выпадающего списка параметра "время перед 'рассветом'" (будильник); синхронизировано с android приложением
