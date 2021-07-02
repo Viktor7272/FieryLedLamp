@@ -470,7 +470,7 @@ void loop()
 do {	
   
   //delay (10);   //Для одной из плат(NodeMCU v3 без металлического экрана над ESP и Flash памятью) пришлось ставить задержку. Остальные работали нормально.
-  
+  yield();
 	if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) //Пришлось уменьшить частоту обращений к обработчику запросов web страницы, чтобы не использовать delay (10);.
 	{
 	HTTP.handleClient(); // Обработка запросов web страницы. 
@@ -478,12 +478,14 @@ do {
 	}
 
   parseUDP();
+  yield();	
  if (Painting == 0) {
 
   effectsTick();
 
   EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &ONflag, 
     &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
+  yield();
 
   //#ifdef USE_NTP
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
@@ -548,6 +550,7 @@ do {
   handleTelnetClient();
   #endif
  }//if (Painting == 0)
+  yield();
   ESP.wdtFeed();
 } while (connect);
 }
