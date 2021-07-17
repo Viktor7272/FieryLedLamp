@@ -19,7 +19,8 @@ void User_setings (){
  HTTP.on("/br", handle_br);  // Яркость
  HTTP.on("/sp", handle_sp);  // Скорость
  HTTP.on("/sc", handle_sc);  // Масштаб / Цвет
- 
+ HTTP.on("/tm", handle_tm);  // Смена темы страници (0 - светлая / 1 - тёмная)
+ HTTP.on("/PassOn", handle_PassOn); // Использовать (1) или нет (0) пароль для доступа к странице Начальных настроек
  HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
  HTTP.on("/time_always", handle_time_always);     // Выводить или нет время бегущей строкой(если задано) на не активной лампе
@@ -164,11 +165,10 @@ void handle_eff_sel () {
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
-	HTTP.send(200, "text/plain", "OK");
+	  HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_eff () {
-  String state = "{}";
 	jsonWrite(configSetup, "eff", HTTP.arg("eff").toInt());
 	if (jsonReadtoInt(configSetup, "eff"))  {
 	  if (++currentMode >= MODE_AMOUNT) currentMode = 0;
@@ -215,8 +215,10 @@ void handle_eff () {
 		updateRemoteBlynkParams();
 		#endif
 	}
-  //state = jsonWrite(state, "state", "{{eff_sel}}");
-  //state = jsonWrite(state, "class", "btn btn-block btn-lg btn-info");
+    //String str = "{}";
+    //str = jsonWrite(str, "title",  "effect.json");
+    //str = jsonWrite(str, "class", "btn btn-block btn-lg btn-info");
+    //Serial.println (str);
 	  HTTP.send(200, "text/plain", "OK"); //HTTP.send(200, "application/json", state); //HTTP.send(200, "{\"state\":\"{{eff_sel}}\"}", "OK");
 }
 
@@ -227,7 +229,10 @@ void handle_br ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
     #endif
-	HTTP.send(200, "text/plain", "OK");
+   //String str = "{}";    
+	 //str = jsonWrite(str, "title", "lkkjg");
+   //Serial.println (str);
+	 HTTP.send(200, "text/plain", "OK");  
 }
 
 void handle_sp ()  {
@@ -237,7 +242,7 @@ void handle_sp ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
     #endif
-	HTTP.send(200, "text/plain", "OK");
+	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_sc ()  {
@@ -247,7 +252,27 @@ void handle_sc ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение Мфыштаба / Цвета: %d\n"), modes[currentMode].Scale);
     #endif
-	HTTP.send(200, "text/plain", "OK");
+	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_tm ()   {
+	bool flg = false;
+	jsonWrite(configSetup, "tm", HTTP.arg("tm").toInt());
+	saveConfig();
+	if (jsonReadtoInt(configSetup, "tm")) flg = FileCopy ("/css/dark/build.css.gz" , "/css/build.css.gz");
+	else flg = FileCopy ("/css/light/build.css.gz" , "/css/build.css.gz");
+	if (flg) HTTP.send(200, "text/plain", "OK");
+	else HTTP.send(404, "text/plain", "File not found");  
+}
+
+void handle_PassOn ()   {
+	bool flg = false;
+	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
+	saveConfig();
+	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json" , "/setup.json");
+	else flg = FileCopy ("/stp/stp_nl.json" , "/setup.json");
+	if (flg) HTTP.send(200, "text/plain", "OK");
+	else HTTP.send(404, "text/plain", "File not found");  
 }
 
 void handle_Power ()  {
@@ -287,3 +312,16 @@ void handle_time_zone() {
   HTTP.send(200, "text/plain", "OK");
 }
 	
+bool FileCopy (String SourceFile , String TargetFile)   {
+  File S_File = SPIFFS.open( SourceFile, "r");
+  File T_File = SPIFFS.open( TargetFile, "w");
+  if (!S_File || !T_File) 
+	return false;
+  size_t size = S_File.size();
+  for (unsigned int i=0; i<size; i++)  {
+   T_File.write(S_File.read ());
+   }
+  S_File.close();
+  T_File.close();
+  return true;
+}

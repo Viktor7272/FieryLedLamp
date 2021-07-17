@@ -1,6 +1,12 @@
 
 void HTTP_init(void) {
-
+/*
+  // --------------------Выдаем данные configJson
+  HTTP.on("/config.live.json", HTTP_GET, []() {
+    outData();
+    HTTP.send(200, "application/json", configJson);
+  });
+*/  
   // -------------------Выдаем данные configSetup
   HTTP.on("/config.setup.json", HTTP_GET, []() {
     HTTP.send(200, "application/json", configSetup);

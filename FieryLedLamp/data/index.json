@@ -9,6 +9,7 @@
    "title": "Главная"
   }
  ],
+"class": "col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6",
  "content": [
   {
    "type": "h5",
@@ -20,7 +21,7 @@
    "type": "hr"
   },
   {
-   "type": "h3",
+   "type": "h6",
    "title": "Включить / Выключить лампу"
   },
   {
@@ -46,6 +47,7 @@
    "name": "eff_sel",
    "state": "{{eff_sel}}",
    "title": "effect.json",
+   "class": "btn",
    "style": "width:60%;display:inline",
    "action": "eff_sel?eff_sel=[[eff_sel]]"
   },
@@ -65,6 +67,7 @@
    "title": "Яркость  {{br}}",
    "state": "{{br}}",
    "pattern": "min=1 max=255 step=1",
+  "response":"[[br]]",
    "action": "br?br=[[br]]"
   },
   {
@@ -73,6 +76,7 @@
    "title": "Скорость  {{sp}}",
    "state": "{{sp}}",
    "pattern": "min=1 max=255 step=1",
+  "response":"[[sp]]",
    "action": "sp?sp=[[sp]]"
   },
   {
@@ -81,27 +85,24 @@
    "title": "Масштаб / Цвет  {{sc}}",
    "state": "{{sc}}",
    "pattern": "min=1 max=100 step=1",
+  "response":"[[sc]]",
    "action": "sc?sc=[[sc]]"
   },
   {
    "type": "hr"
   },
   {
-   "type": "link",
-   "title": "Начальная настройка",
-   "action": "/index.htm?setup",
-   "class": "btn btn-block btn-warning",
-   "style": "width:70%;float:left;"
-  },
- {
  "type": "link",
    "title": "Настройки пользователя",
  "action": "/index.htm?user_seting",
-    "class": "btn btn-block btn-success",
- "style": "width:70%;float:right;"
+    "class": "btn btn-block btn-success"
   }, 
-   {
-"type":"hr"}  ,
+  {
+   "type": "link",
+   "title": "Начальные установки",
+   "action": "/index.htm?setup",
+   "class": "btn btn-block btn-warning"
+  },
   {
    "type": "hr"
   }

@@ -1,5 +1,5 @@
 {"SSDP":"Led Lamp WEB",
-"ssidAP":"WiFi",
+"ssidAP":"Led Lamp WEB",
 "passwordAP":"31415926",
 "ssid":"",
 "password":"",
@@ -26,5 +26,7 @@
 "eff":0,
 "br":127,
 "sp":127,
-"sc":50
+"sc":50,
+"tm":1,
+"PassOn":0
 }

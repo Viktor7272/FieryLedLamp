@@ -428,12 +428,13 @@ void setup()
 
 void loop()
 {
+  
  if (espMode) {
   if (WiFi.status() != WL_CONNECTED) {
 	if ((millis()-my_timer) >= 1000UL) {	
 	  my_timer=millis();
 	  if (ESP_CONN_TIMEOUT--) {
-		LOG.print(F("."));
+		LOG.print(".");
 		ESP.wdtFeed();
 	  }
 	  else {
@@ -471,23 +472,27 @@ void loop()
  
  if (connect || !espMode)  { my_timer = millis(); }
   
-do {	
+do {	//++++++++++++++++++++++++++++++++++++++++++++++========= Главный цикл ==========++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  //delay (10);   //Для одной из плат(NodeMCU v3 без металлического экрана над ESP и Flash памятью) пришлось ставить задержку. Остальные работали нормально.
+  delay (7);   //Для некоторых плат ( без металлического экрана над ESP и Flash памятью ) пришлось ставить задержку. Остальные работали нормально.
+  yield();
   
-	if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) //Пришлось уменьшить частоту обращений к обработчику запросов web страницы, чтобы не использовать delay (10);.
+	if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) 
 	{
 	HTTP.handleClient(); // Обработка запросов web страницы. 
 	my_timer = millis();
 	}
-
+ 
+  //HTTP.handleClient(); // Обработка запросов web страницы. 
   parseUDP();
+  yield();
  if (Painting == 0) {
 
   effectsTick();
 
   EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &ONflag, 
     &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
+    yield();
 
   //#ifdef USE_NTP
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
@@ -506,7 +511,7 @@ do {
 
   TimerManager::HandleTimer(&ONflag, &settChanged,          // обработка событий таймера отключения лампы
     &eepromTimeout, &changePower);
-
+  
   if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
       &ONflag,
       &currentMode,
@@ -552,6 +557,8 @@ do {
   handleTelnetClient();
   #endif
  }//if (Painting == 0)
+  yield();
   ESP.wdtFeed();
+  //delay (1);
 } while (connect);
 }
