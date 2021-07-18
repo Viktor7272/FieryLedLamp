@@ -9,12 +9,18 @@ void User_setings (){
  HTTP.on("/ESP_mode", handle_ESP_mode); // Установка ESP Mode
  HTTP.on("/eff_reset", handle_eff_reset);  //сброс настроек эффектов по умолчанию
  
- HTTP.on("/run_text", handle_run_text);  //
- HTTP.on("/night_time", handle_night_time);  //
- HTTP.on("/effect_always", handle_effect_always);  //
- HTTP.on("/timer5h", handle_timer5h);  //
- HTTP.on("/ntp", handle_ntp);  //
- 
+ HTTP.on("/run_text", handle_run_text);  // Текст для бегущей строки
+ HTTP.on("/night_time", handle_night_time);  // Параметры вывода времени бегущей строкой на ВЫключенной лампе (яркость и время день,ночь) 
+ HTTP.on("/effect_always", handle_effect_always);  // Не возобновлять работу эффектов
+ HTTP.on("/timer5h", handle_timer5h);  // Автовыключение через 5 часов
+ HTTP.on("/ntp", handle_ntp);  // Адрес NTP сервера
+ HTTP.on("/eff_sel", handle_eff_sel);  // Выбор эффекта из списка
+ HTTP.on("/eff", handle_eff);  // Следующий / Предыдущий
+ HTTP.on("/br", handle_br);  // Яркость
+ HTTP.on("/sp", handle_sp);  // Скорость
+ HTTP.on("/sc", handle_sc);  // Масштаб / Цвет
+ HTTP.on("/tm", handle_tm);  // Смена темы страници (0 - светлая / 1 - тёмная)
+ HTTP.on("/PassOn", handle_PassOn); // Использовать (1) или нет (0) пароль для доступа к странице Начальных настроек
  HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
  HTTP.on("/time_always", handle_time_always);     // Выводить или нет время бегущей строкой(если задано) на не активной лампе
@@ -138,9 +144,140 @@ void handle_ntp ()  {
 	//ESP.restart();
 }
 
+void handle_eff_sel () {
+	jsonWrite(configSetup, "eff_sel", HTTP.arg("eff_sel").toInt());
+	currentMode = jsonReadtoInt(configSetup, "eff_sel");
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+    FastLED.setBrightness(modes[currentMode].Brightness);
+    loadingFlag = true;
+    settChanged = true;
+    eepromTimeout = millis();
+      if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+    #if (USE_MQTT)
+    if (espMode == 1U)
+    {
+      MqttManager::needToPublish = true;
+    }
+    #endif
+    #ifdef USE_BLYNK
+    updateRemoteBlynkParams();
+    #endif
+	  HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_eff () {
+	jsonWrite(configSetup, "eff", HTTP.arg("eff").toInt());
+	if (jsonReadtoInt(configSetup, "eff"))  {
+	  if (++currentMode >= MODE_AMOUNT) currentMode = 0;
+	  jsonWrite(configSetup, "eff_sel", currentMode);
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+      FastLED.setBrightness(modes[currentMode].Brightness);
+      loadingFlag = true;
+      settChanged = true;
+      eepromTimeout = millis();
+      if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+      #if (USE_MQTT)
+       if (espMode == 1U)
+      {
+      MqttManager::needToPublish = true;
+      }
+      #endif
+      #ifdef USE_BLYNK
+      updateRemoteBlynkParams();
+      #endif
+	}
+	else  {
+		if (--currentMode >= MODE_AMOUNT) currentMode = MODE_AMOUNT - 1;
+    
+		jsonWrite(configSetup, "eff_sel", currentMode);
+		jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+		FastLED.setBrightness(modes[currentMode].Brightness);
+		loadingFlag = true;
+		settChanged = true;
+		eepromTimeout = millis();
+		if (random_on && FavoritesManager::FavoritesRunning)
+        selectedSettings = 1U;
+		#if (USE_MQTT)
+		if (espMode == 1U)
+		{
+		MqttManager::needToPublish = true;
+		}
+		#endif
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+	}
+    //String str = "{}";
+    //str = jsonWrite(str, "title",  "effect.json");
+    //str = jsonWrite(str, "class", "btn btn-block btn-lg btn-info");
+    //Serial.println (str);
+	  HTTP.send(200, "text/plain", "OK"); //HTTP.send(200, "application/json", state); //HTTP.send(200, "{\"state\":\"{{eff_sel}}\"}", "OK");
+}
+
+void handle_br ()  {
+	jsonWrite(configSetup, "br", HTTP.arg("br").toInt());
+	modes[currentMode].Brightness = jsonReadtoInt(configSetup, "br");
+	FastLED.setBrightness(modes[currentMode].Brightness);
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
+    #endif
+   //String str = "{}";    
+	 //str = jsonWrite(str, "title", "lkkjg");
+   //Serial.println (str);
+	 HTTP.send(200, "text/plain", "OK");  
+}
+
+void handle_sp ()  {
+	jsonWrite(configSetup, "sp", HTTP.arg("sp").toInt());
+	modes[currentMode].Speed = jsonReadtoInt(configSetup, "sp");
+	loadingFlag = true;  // Перезапуск Эффекта
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
+    #endif
+	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_sc ()  {
+	jsonWrite(configSetup, "sc", HTTP.arg("sc").toInt());
+	modes[currentMode].Scale = jsonReadtoInt(configSetup, "sc");
+	loadingFlag = true;  // Перезапуск Эффекта
+    #ifdef GENERAL_DEBUG
+    LOG.printf_P(PSTR("Новое значение Мфыштаба / Цвета: %d\n"), modes[currentMode].Scale);
+    #endif
+	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_tm ()   {
+	bool flg = false;
+	jsonWrite(configSetup, "tm", HTTP.arg("tm").toInt());
+	saveConfig();
+	if (jsonReadtoInt(configSetup, "tm")) flg = FileCopy ("/css/dark/build.css.gz" , "/css/build.css.gz");
+	else flg = FileCopy ("/css/light/build.css.gz" , "/css/build.css.gz");
+	if (flg) HTTP.send(200, "text/plain", "OK");
+	else HTTP.send(404, "text/plain", "File not found");  
+}
+
+void handle_PassOn ()   {
+	bool flg = false;
+	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
+	saveConfig();
+	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json" , "/setup.json");
+	else flg = FileCopy ("/stp/stp_nl.json" , "/setup.json");
+	if (flg) HTTP.send(200, "text/plain", "OK");
+	else HTTP.send(404, "text/plain", "File not found");  
+}
+
 void handle_Power ()  {
 	jsonWrite(configSetup, "Power", HTTP.arg("Power").toInt());
-	saveConfig(); 
+	//saveConfig(); 
 	ONflag = jsonReadtoInt(configSetup, "Power");
 	changePower();
 	HTTP.send(200, "text/plain", "OK");
@@ -175,3 +312,16 @@ void handle_time_zone() {
   HTTP.send(200, "text/plain", "OK");
 }
 	
+bool FileCopy (String SourceFile , String TargetFile)   {
+  File S_File = SPIFFS.open( SourceFile, "r");
+  File T_File = SPIFFS.open( TargetFile, "w");
+  if (!S_File || !T_File) 
+	return false;
+  size_t size = S_File.size();
+  for (unsigned int i=0; i<size; i++)  {
+   T_File.write(S_File.read ());
+   }
+  S_File.close();
+  T_File.close();
+  return true;
+}

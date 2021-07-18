@@ -21,5 +21,12 @@
 "ntp":"pl.pool.ntp.org",
 "run_text":"Привет!",
 "timer5h":0,
-"Power":0
+"Power":0,
+"eff_sel":0,
+"eff":0,
+"br":127,
+"sp":127,
+"sc":50,
+"tm":1,
+"PassOn":0
 }

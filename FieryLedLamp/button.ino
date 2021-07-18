@@ -63,6 +63,10 @@ void buttonTick()
     else
       if (++currentMode >= MODE_AMOUNT) currentMode = 0;
     
+	jsonWrite(configSetup, "eff_sel", currentMode);
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
@@ -100,6 +104,10 @@ void buttonTick()
 	else 
 	  if (--currentMode >= MODE_AMOUNT) currentMode = MODE_AMOUNT - 1;
     
+	jsonWrite(configSetup, "eff_sel", currentMode);
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
@@ -131,6 +139,10 @@ void buttonTick()
       ONflag = true;
 	  jsonWrite(configSetup, "Power", ONflag);
       currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+	  jsonWrite(configSetup, "eff_sel", currentMode);
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+      jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+      jsonWrite(configSetup, "sc", modes[currentMode].Scale);
       //FastLED.clear();
       //delay(1);
       changePower();
@@ -219,6 +231,7 @@ if (touch.isStep())
             ? modes[currentMode].Brightness + delta
             : modes[currentMode].Brightness - delta,
           1, 255);
+		jsonWrite(configSetup, "br", modes[currentMode].Brightness);
         FastLED.setBrightness(modes[currentMode].Brightness);
 
         #ifdef GENERAL_DEBUG
@@ -231,6 +244,7 @@ if (touch.isStep())
       case 1U:                                              // удержание после одного клика - изменение скорости
       {
         modes[currentMode].Speed = constrain(brightDirection ? modes[currentMode].Speed + 1 : modes[currentMode].Speed - 1, 1, 255);
+		jsonWrite(configSetup, "sp", modes[currentMode].Speed);
         loadingFlag = true; // без перезапуска эффекта ничего и не увидишь
 
         #ifdef GENERAL_DEBUG
@@ -243,6 +257,7 @@ if (touch.isStep())
       case 2U:                                              // удержание после двух кликов - изменение масштаба
       {
         modes[currentMode].Scale = constrain(brightDirection ? modes[currentMode].Scale + 1 : modes[currentMode].Scale - 1, 1, 100);
+		jsonWrite(configSetup, "sc", modes[currentMode].Scale);
         loadingFlag = true; // без перезапуска эффекта ничего и не увидишь
 
         #ifdef GENERAL_DEBUG
@@ -264,6 +279,10 @@ if (touch.isStep())
   if (!Button_Holding) {
     Button_Holding = true;
     currentMode = EFF_WHITE_COLOR;
+	jsonWrite(configSetup, "eff_sel", currentMode);
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
     ONflag = true;
 	jsonWrite(configSetup, "Power", ONflag);
     changePower();

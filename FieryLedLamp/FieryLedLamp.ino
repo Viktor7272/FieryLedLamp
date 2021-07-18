@@ -57,8 +57,8 @@
 #include "MqttManager.h"
 #endif
 #include "TimerManager.h"
-#include "FavoritesManager.h"
 #include "EepromManager.h"
+#include "FavoritesManager.h"
 #ifdef USE_BLYNK
 #include <BlynkSimpleEsp8266.h>
 #endif
@@ -142,7 +142,7 @@ char packetBuffer[MAX_UDP_BUFFER_SIZE];                     // buffer to hold in
 char inputBuffer[MAX_UDP_BUFFER_SIZE];
 static const uint8_t maxDim = max(WIDTH, HEIGHT);
 
-ModeType modes[MODE_AMOUNT];
+
 AlarmType alarms[7];
 
 static const uint8_t dawnOffsets[] PROGMEM = {5, 10, 15, 20, 25, 30, 40, 50, 60};   // опции для выпадающего списка параметра "время перед 'рассветом'" (будильник); синхронизировано с android приложением
@@ -151,7 +151,7 @@ bool dawnFlag = false;
 uint32_t thisTime;
 bool manualOff = false;
 
-uint8_t currentMode = 0;
+uint8_t currentMode = 3;
 bool loadingFlag = true;
 bool ONflag = false;
 uint32_t eepromTimeout;
@@ -191,8 +191,9 @@ uint8_t PRINT_TIME ;
 
 
 
-void setup()
+void setup()  //==================================================================  void setup()  =========================================================================
 {
+	
   Serial.begin(115200);
   Serial.println();
   ESP.wdtEnable(WDTO_8S);
@@ -249,10 +250,9 @@ void setup()
   #ifdef USE_NTP
   (jsonRead(configSetup, "ntp")).toCharArray (NTP_ADDRESS, (jsonRead(configSetup, "ntp")).length()+1);
   #endif
-  jsonWrite(configSetup, "Power", ONflag);
-  //aveConfig(); 
-  Serial.print ("TextTicker = ");
-  Serial.println (TextTicker);
+  //saveConfig(); 
+  //Serial.print ("TextTicker = ");
+  //Serial.println (TextTicker);
   #ifdef USE_NTP
   winterTime.offset = jsonReadtoInt(configSetup, "timezone") * 60;
   summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") *60;
@@ -321,6 +321,11 @@ void setup()
     &(FavoritesManager::SaveFavoritesToEeprom),
     &(restoreSettings)); // не придумал ничего лучше, чем делать восстановление настроек по умолчанию в обработчике инициализации EepromManager
 
+  jsonWrite(configSetup, "Power", ONflag);
+  jsonWrite(configSetup, "eff_sel", currentMode);
+  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
 
   // WI-FI
   
@@ -422,14 +427,15 @@ void setup()
 }
 
 
-void loop()
+void loop()  //====================================================================  void loop()  ===========================================================================
 {
+  
  if (espMode) {
   if (WiFi.status() != WL_CONNECTED) {
 	if ((millis()-my_timer) >= 1000UL) {	
 	  my_timer=millis();
 	  if (ESP_CONN_TIMEOUT--) {
-		LOG.print(F("."));
+		LOG.print(".");
 		ESP.wdtFeed();
 	  }
 	  else {
@@ -467,25 +473,27 @@ void loop()
  
  if (connect || !espMode)  { my_timer = millis(); }
   
-do {	
+do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++========= Главный цикл ==========+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  //delay (10);   //Для одной из плат(NodeMCU v3 без металлического экрана над ESP и Flash памятью) пришлось ставить задержку. Остальные работали нормально.
+  delay (7);   //Для некоторых плат ( без металлического экрана над ESP и Flash памятью ) пришлось ставить задержку. Остальные работали нормально.
   yield();
-	if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) //Пришлось уменьшить частоту обращений к обработчику запросов web страницы, чтобы не использовать delay (10);.
+  
+	if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) 
 	{
 	HTTP.handleClient(); // Обработка запросов web страницы. 
 	my_timer = millis();
 	}
-
+ 
+  //HTTP.handleClient(); // Обработка запросов web страницы. 
   parseUDP();
-  yield();	
+  yield();
  if (Painting == 0) {
 
   effectsTick();
 
   EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &ONflag, 
     &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
-  yield();
+    yield();
 
   //#ifdef USE_NTP
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
@@ -504,7 +512,7 @@ do {
 
   TimerManager::HandleTimer(&ONflag, &settChanged,          // обработка событий таймера отключения лампы
     &eepromTimeout, &changePower);
-
+  
   if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
       &ONflag,
       &currentMode,
@@ -552,5 +560,6 @@ do {
  }//if (Painting == 0)
   yield();
   ESP.wdtFeed();
+  //delay (7);
 } while (connect);
 }

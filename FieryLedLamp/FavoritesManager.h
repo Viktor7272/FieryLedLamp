@@ -12,6 +12,7 @@
     uint8_t shuffleCurrentIndex = MODE_AMOUNT; // начальное значение увеличивается на 1 и затем сравнивается с MODE_AMOUNT, чтобы создать первоначальное перемешивание режимов
 #endif
 
+ModeType modes[MODE_AMOUNT];
 
 class FavoritesManager
 {
@@ -111,6 +112,10 @@ class FavoritesManager
       if (millis() >= nextModeAt)
       {
         *currentMode = getNextFavoriteMode(currentMode);
+		jsonWrite(configSetup, "eff_sel", *currentMode);
+		jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
+		jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
+		jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
         *loadingFlag = true;
         nextModeAt = getNextTime();
 

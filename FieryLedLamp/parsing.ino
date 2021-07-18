@@ -99,6 +99,10 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       currentMode = (uint8_t)atoi(buff);
       updateSets();
       sendCurrent(inputBuffer);
+	  jsonWrite(configSetup, "eff_sel", currentMode);
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
       //FastLED.clear();
       //delay(1);
 
@@ -116,6 +120,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
+	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
       FastLED.setBrightness(modes[currentMode].Brightness);
       //loadingFlag = true; //не хорошо делать перезапуск эффекта после изменения яркости, но в некоторых эффектах от чётности яркости мог бы зависеть внешний вид
       settChanged = true;
@@ -138,6 +143,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Speed = atoi(buff);
+	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
       updateSets();
       sendCurrent(inputBuffer);
       #ifdef USE_BLYNK_PLUS
@@ -149,6 +155,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Scale = atoi(buff);
+	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
       updateSets();
       sendCurrent(inputBuffer);
       #ifdef USE_BLYNK_PLUS
@@ -340,6 +347,10 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
           delay(1);
           ONflag = true;
 		  jsonWrite(configSetup, "Power", ONflag);
+		  jsonWrite(configSetup, "eff_sel", currentMode);
+		  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+		  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+		  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
           changePower();
         }
         else
@@ -380,8 +391,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       uint8_t ALLbri = constrain(atoi(buff), 1, 255);
       for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
-        modes[i].Brightness = ALLbri;
+        modes[i].Brightness = ALLbri;		
       }
+	  jsonWrite(configSetup, "br", ALLbri);
       FastLED.setBrightness(ALLbri);
       loadingFlag = true;
     }
@@ -706,6 +718,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
             modes[eff].Brightness = getValue(buff, ';', 1).toInt();
             modes[eff].Speed = getValue(buff, ';', 2).toInt();
             modes[eff].Scale = getValue(buff, ';', 3).toInt();
+			jsonWrite(configSetup, "br", modes[eff].Brightness);
+			jsonWrite(configSetup, "sp", modes[eff].Speed);
+			jsonWrite(configSetup, "sc", modes[eff].Scale);
             if (eff == currentMode) {
               updateSets();
               #ifdef USE_BLYNK_PLUS
