@@ -47,7 +47,6 @@
    "name": "eff_sel",
    "state": "{{eff_sel}}",
    "title": "effect.json",
-   "class": "btn",
    "style": "width:60%;display:inline",
    "action": "eff_sel?eff_sel=[[eff_sel]]"
   },
