@@ -165,7 +165,7 @@ void handle_eff_sel () {
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
-	  HTTP.send(200, "text/plain", "OK");
+	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 void handle_eff () {
@@ -219,7 +219,7 @@ void handle_eff () {
     //str = jsonWrite(str, "title",  "effect.json");
     //str = jsonWrite(str, "class", "btn btn-block btn-lg btn-info");
     //Serial.println (str);
-	  HTTP.send(200, "text/plain", "OK"); //HTTP.send(200, "application/json", state); //HTTP.send(200, "{\"state\":\"{{eff_sel}}\"}", "OK");
+	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); 
 }
 
 void handle_br ()  {
@@ -232,7 +232,7 @@ void handle_br ()  {
    //String str = "{}";    
 	 //str = jsonWrite(str, "title", "lkkjg");
    //Serial.println (str);
-	 HTTP.send(200, "text/plain", "OK");  
+	 HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  
 }
 
 void handle_sp ()  {
@@ -242,7 +242,7 @@ void handle_sp ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
     #endif
-	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 void handle_sc ()  {
@@ -252,7 +252,7 @@ void handle_sc ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение Мфыштаба / Цвета: %d\n"), modes[currentMode].Scale);
     #endif
-	HTTP.send(200, "application/json", configSetup);  //HTTP.send(200, "text/plain", "OK");
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 void handle_tm ()   {
