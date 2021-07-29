@@ -295,38 +295,38 @@ void handle_summer_time() {
  }
  
 void handle_time_always() {
-  jsonWrite(configSetup, "time_always", HTTP.arg("time_always").toInt());
-  saveConfig();  
-  time_always = jsonReadtoInt(configSetup, "time_always");
-  HTTP.send(200, "text/plain", "OK");
+  	jsonWrite(configSetup, "time_always", HTTP.arg("time_always").toInt());
+  	saveConfig();  
+  	time_always = jsonReadtoInt(configSetup, "time_always");
+  	HTTP.send(200, "text/plain", "OK");
  }
 
-void handle_alarm ()  {
-    int x=0;  
-    char a[5],h[5],m[5],i[2];  // текстовый массив с именами полей json файла
-
-    String configAlarm = readFile("alarm_config.json", 512);   
-    //LOG.println(configAlarm);
-
-    // подготовка  строк с именами полей json file
-    for (int k=0; k<7; k++) {
-      itoa (k, i, 10);
-      i[1] = 0;
-      a = "\"a" + i + "\"" ;
-      h = "\"h" + i + "\"" ;
-      m = "\"m" + i + "\"" ;
-      //сохранение параметров в строку
-      jsonWrite(configAlarm, a, HTTP.arg(a).toInt());
-      jsonWrite(configAlarm, h, HTTP.arg(h).toInt());
-      jsonWrite(configAlarm, m, HTTP.arg(m).toInt());
-      //сохранение установок будильника
-      alarms[k].State = (jsonReadtoInt(configAlarm, a));
-      alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
-      EepromManager::SaveAlarmsSettings(&k, alarms);
+void handle_alarm ()  { 
+    	char a[5],h[5],m[5],i[2];  // текстовый массив с именами полей json файла
+    	String configAlarm = readFile("alarm_config.json", 512); 
+	#ifdef GENERAL_DEBUG
+    	LOG.println(configAlarm);
+	#endif
+  	  // подготовка  строк с именами полей json file
+  	  for (int k=0; k<7; k++) {
+   	   itoa (k, i, 10);
+    	   i[1] = 0;
+      	   a = "\"a" + i + "\"" ;
+      	   h = "\"h" + i + "\"" ;
+     	   m = "\"m" + i + "\"" ;
+      	   //сохранение параметров в строку
+     	  jsonWrite(configAlarm, a, HTTP.arg(a).toInt());
+     	  jsonWrite(configAlarm, h, HTTP.arg(h).toInt());
+     	  jsonWrite(configAlarm, m, HTTP.arg(m).toInt());
+     	  //сохранение установок будильника
+     	  alarms[k].State = (jsonReadtoInt(configAlarm, a));
+     	  alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
+     	  EepromManager::SaveAlarmsSettings(&k, alarms);
    }
-   //============Доделать обработку продолжительности рассвета ================================================================================
-   writeFile("alarm_config.json", configAlarm );
-   HTTP.send(200, "text/plain", "OK");
+	jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());	
+  	//============Доделать обработку продолжительности рассвета ================================================================================
+  	writeFile("alarm_config.json", configAlarm );
+  	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 // Установка параметров времянной зоны по запросу вида, например, http://192.168.0.101/timeZone?timeZone=3
