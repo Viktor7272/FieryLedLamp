@@ -324,6 +324,7 @@ void handle_alarm ()  {
       alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
       EepromManager::SaveAlarmsSettings(&k, alarms);
    }
+   //============Доделать обработку продолжительности рассвета ================================================================================
    writeFile("alarm_config.json", configAlarm );
    HTTP.send(200, "text/plain", "OK");
 }
