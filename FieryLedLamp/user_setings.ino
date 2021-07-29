@@ -24,7 +24,8 @@ void User_setings (){
  HTTP.on("/Power", handle_Power);          // устройство вкл/выкл
  HTTP.on("/summer_time", handle_summer_time);  //Переход на лнтнее время 1 - да , 0 - нет
  HTTP.on("/time_always", handle_time_always);     // Выводить или нет время бегущей строкой(если задано) на не активной лампе
- HTTP.on("/timeZone", handle_time_zone);    // Установка времянной зоны по запросу вида http://192.168.0.101/timeZone?timeZone=3
+ HTTP.on("/timeZone", handle_time_zone);    // Установка времянной зоны по запросу вида handle_alarm
+ HTTP.on("/alarm", handle_alarm);	
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -299,7 +300,34 @@ void handle_time_always() {
   time_always = jsonReadtoInt(configSetup, "time_always");
   HTTP.send(200, "text/plain", "OK");
  }
- 
+
+void handle_alarm ()  {
+    int x=0;  
+    char a[5],h[5],m[5],i[2];  // текстовый массив с именами полей json файла
+
+    String configAlarm = readFile("alarm_config.json", 512);   
+    //LOG.println(configAlarm);
+
+    // подготовка  строк с именами полей json file
+    for (int k=0; k<7; k++) {
+      itoa (k, i, 10);
+      i[1] = 0;
+      a = "\"a" + i + "\"" ;
+      h = "\"h" + i + "\"" ;
+      m = "\"m" + i + "\"" ;
+      //сохранение параметров в строку
+      jsonWrite(configAlarm, a, HTTP.arg(a).toInt());
+      jsonWrite(configAlarm, h, HTTP.arg(h).toInt());
+      jsonWrite(configAlarm, m, HTTP.arg(m).toInt());
+      //сохранение установок будильника
+      alarms[k].State = (jsonReadtoInt(configAlarm, a));
+      alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
+      EepromManager::SaveAlarmsSettings(&k, alarms);
+   }
+   writeFile("alarm_config.json", configAlarm );
+   HTTP.send(200, "text/plain", "OK");
+}
+
 // Установка параметров времянной зоны по запросу вида, например, http://192.168.0.101/timeZone?timeZone=3
 void handle_time_zone() {
   #ifdef USE_NTP
