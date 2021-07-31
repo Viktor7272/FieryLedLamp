@@ -378,9 +378,9 @@ void handle_alarm ()  {
      	  EepromManager::SaveAlarmsSettings(&k, alarms);
    }
 	jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());
-	jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
+  jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
 	dawnMode = jsonReadtoInt(configAlarm, "t")-1;
-	DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
+  DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
 	EepromManager::SaveDawnMode(&dawnMode);
   	writeFile("alarm_config.json", configAlarm );
   	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");

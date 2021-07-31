@@ -792,51 +792,19 @@ void sendCurrent(char *outputBuffer)
 
 void sendAlarms(char *outputBuffer)
 {
-      char k[2];
-	  bool alarm_change = false;
-    	String configAlarm = readFile("alarm_config.json", 512); 
-	#ifdef GENERAL_DEBUG
-		LOG.println ("\nТекущие установки будильника");
-    	LOG.println(configAlarm);
-	#endif
   strcpy_P(outputBuffer, PSTR("ALMS"));
 
   for (byte i = 0; i < 7; i++)
   {
-	itoa ((i+1), k, 10);
-    k[1] = 0;
-    String a = "a" + String (k) ;
-    String h = "h" + String (k) ;
-    String m = "m" + String (k) ;
-	if (alarms[i].State != (jsonReadtoInt(configAlarm, a)) || alarms[i].Time != (jsonReadtoInt(configAlarm, h)) * 60U + (jsonReadtoInt(configAlarm, m)))
-	{
-		alarm_change = true;
-		jsonWrite(configAlarm, a, alarms[i].State);
-		jsonWrite(configAlarm, h, (alarms[i].Time / 60U));
-		jsonWrite(configAlarm, m, (alarms[i].Time - (alarms[i].Time / 60U)));
-	}
-    sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)alarms[i].State); 
+    sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)alarms[i].State);
   }
 
   for (byte i = 0; i < 7; i++)
   {
     sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, alarms[i].Time);
   }
-  
-  if (dawnMode != (jsonReadtoInt(configAlarm, "t")-1))
-	{
-	  alarm_change = true;
-	  jsonWrite(configAlarm, "t", (dawnMode + 1));
-	}
+
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, dawnMode + 1);
-  if (alarm_change)
-	{
-	  writeFile("alarm_config.json", configAlarm );
-	#ifdef GENERAL_DEBUG
-		LOG.println ("\nНовые установки будильника сохранены в файл");
-    	LOG.println(configAlarm);
-	#endif
-	}
 }
 
 void sendTimer(char *outputBuffer)
