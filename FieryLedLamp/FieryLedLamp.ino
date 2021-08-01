@@ -174,7 +174,7 @@ uint32_t FavoritesManager::nextModeAt = 0UL;
 
 //bool CaptivePortalManager::captivePortalCalled = false;
 
-char TextTicker [43];
+char TextTicker [80];
 int Painting = 0; CRGB DriwingColor = CRGB(255, 255, 255);
 
 uint8_t espMode ;
