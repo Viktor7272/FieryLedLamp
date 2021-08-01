@@ -133,6 +133,8 @@ void buttonTick()
   // четырёхкратное нажатие
   if (clickCount == 4U)
   {
+  
+	bool ota = false;
     #ifdef OTA
     if (otaManager.RequestOtaUpdate())
     {
@@ -146,8 +148,27 @@ void buttonTick()
       //FastLED.clear();
       //delay(1);
       changePower();
+	  ota = true;
     }
     #endif
+	
+	#ifdef BUTTON_CAN_SET_SLEEP_TIMER
+	if (!ota)
+	{
+    // мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+    showWarning(CRGB::Blue, 1000, 250U);                    // мигание синим цветом 1 секунду
+    ONflag = true;
+    changePower();
+	jsonWrite(configSetup, "Power", ONflag);
+    settChanged = true;
+    eepromTimeout = millis();
+    #ifdef USE_BLYNK
+    updateRemoteBlynkParams();
+    #endif
+    TimerManager::TimeToFire = millis() + 5UL * 60UL * 1000UL;
+    TimerManager::TimerRunning = true;
+	}
+    #endif //BUTTON_CAN_SET_SLEEP_TIMER	
   }
 
 
@@ -217,7 +238,7 @@ if (touch.isStep())
   {
 
     int8_t but = touch.getHoldClicks();
-        Serial.println (but);
+        //Serial.println (but);
 
     switch (but )
     {
@@ -266,6 +287,26 @@ if (touch.isStep())
 
         break;
       }
+	  
+	    #ifdef BUTTON_CAN_SET_SLEEP_TIMER
+	  case 3U:
+	  {
+		Button_Holding = true;
+		// мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+		showWarning(CRGB::Blue, 1500U, 250U);                    // мигание синим цветом 1 секунду
+		ONflag = true;
+		changePower();
+		jsonWrite(configSetup, "Power", ONflag);
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		TimerManager::TimeToFire = millis() + 10UL * 60UL * 1000UL;
+		TimerManager::TimerRunning = true;
+		break;
+	  }
+		#endif //BUTTON_CAN_SET_SLEEP_TIMER
 
       default:
         break;
@@ -276,22 +317,51 @@ if (touch.isStep())
   }
   else
   {
-  if (!Button_Holding) {
-    Button_Holding = true;
-    currentMode = EFF_WHITE_COLOR;
-	jsonWrite(configSetup, "eff_sel", currentMode);
-	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
-    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
-    ONflag = true;
-	jsonWrite(configSetup, "Power", ONflag);
-    changePower();
-    settChanged = true;
-    eepromTimeout = millis();
-    #ifdef USE_BLYNK
-    updateRemoteBlynkParams();
-    #endif
-    }
+  if (!Button_Holding ) {
+    int8_t but = touch.getHoldClicks();
+        //Serial.println (but);
+
+    switch (but )
+    {
+      case 0U:                                              // просто удержание (до удержания кнопки кликов не было) - белый свет
+	  {
+		Button_Holding = true;
+		currentMode = EFF_WHITE_COLOR;
+		jsonWrite(configSetup, "eff_sel", currentMode);
+		jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+		jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+		jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+		ONflag = true;
+		jsonWrite(configSetup, "Power", ONflag);
+		changePower();
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		break;
+	  }
+	    #ifdef BUTTON_CAN_SET_SLEEP_TIMER	  
+	  case 3U:
+	  {
+		Button_Holding = true;
+		// мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+		showWarning(CRGB::Blue, 1500U, 250U);                    // мигание синим цветом 1 секунду
+		ONflag = true;
+		changePower();
+		jsonWrite(configSetup, "Power", ONflag);
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		TimerManager::TimeToFire = millis() + 10UL * 60UL * 1000UL;
+		TimerManager::TimerRunning = true;
+		break;		
+	  }
+		#endif //BUTTON_CAN_SET_SLEEP_TIMER	  
+	}
+   }
   }
 
   // кнопка отпущена после удерживания
