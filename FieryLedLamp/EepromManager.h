@@ -165,14 +165,17 @@ class EepromManager
       {
         *settChanged = false;
         *eepromTimeout = millis();
-        SaveOnFlag(onFlag);
-        SaveModesSettings(currentMode, modes);
-        if (EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS) != *currentMode)
-        {
-          EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, *currentMode);
-        }
-        saveFavoritesSettings();
-        EEPROM.commit();
+        //SaveOnFlag(onFlag);
+        #ifndef DONT_TURN_ON_AFTER_SHUTDOWN
+        EEPROM.write(EEPROM_LAMP_ON_ADDRESS, *onFlag);
+        #endif      
+        //SaveModesSettings(currentMode, modes);
+        for (uint8_t i = 0; i < MODE_AMOUNT; i++)
+          EEPROM.put(EEPROM_MODES_START_ADDRESS + EEPROM_MODE_STRUCT_SIZE * i, modes[i]);
+       
+        EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, *currentMode);
+        saveFavoritesSettings(); // там уже есть EEPROM.commit();
+        //EEPROM.commit();
       }
     }
 
