@@ -327,7 +327,7 @@ void setup()  //================================================================
   jsonWrite(configSetup, "sp", modes[currentMode].Speed);
   jsonWrite(configSetup, "sc", modes[currentMode].Scale);
   
-  sendAlarms(inputBuffer);
+  sendAlarms(inputBuffer);  // Чтение настроек будильника при старте лампы
   #ifdef GENERAL_DEBUG
   LOG.print(F("\nDAWN_TIMEOUT=afer = "));
   LOG.println ( DAWN_TIMEOUT );
