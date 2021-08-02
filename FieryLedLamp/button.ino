@@ -134,7 +134,7 @@ void buttonTick()
   if (clickCount == 4U)
   {
   
-	bool ota = false;
+	//bool ota = false;
     #ifdef OTA
     if (otaManager.RequestOtaUpdate())
     {
@@ -148,12 +148,13 @@ void buttonTick()
       //FastLED.clear();
       //delay(1);
       changePower();
-	  ota = true;
+	  //ota = true;
     }
+    else
     #endif
 	
 	#ifdef BUTTON_CAN_SET_SLEEP_TIMER
-	if (!ota)
+	//if (!ota)
 	{
     // мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
     showWarning(CRGB::Blue, 1000, 250U);                    // мигание синим цветом 1 секунду
@@ -169,6 +170,7 @@ void buttonTick()
     TimerManager::TimerRunning = true;
 	}
     #endif //BUTTON_CAN_SET_SLEEP_TIMER	
+    ;
   }
 
 

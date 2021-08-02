@@ -246,7 +246,7 @@ void setup()  //================================================================
   NIGHT_HOURS_STOP = 60U * jsonReadtoInt(configSetup, "day_time");
   DAY_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "day_bright");
   DONT_TURN_ON_AFTER_SHUTDOWN = jsonReadtoInt(configSetup, "effect_always"); 
-  AUTOMATIC_OFF_TIME = (5 * 60UL * 60UL * 1000UL) * ( uint32_t )(jsonReadtoInt(configSetup, "timer5h"));
+  AUTOMATIC_OFF_TIME = (5 * 60UL * 60UL * 1000UL) * ( uint32_t )(jsonReadtoInt(configSetup, "timer5h"));  
   #ifdef USE_NTP
   (jsonRead(configSetup, "ntp")).toCharArray (NTP_ADDRESS, (jsonRead(configSetup, "ntp")).length()+1);
   #endif
@@ -326,6 +326,12 @@ void setup()  //================================================================
   jsonWrite(configSetup, "br", modes[currentMode].Brightness);
   jsonWrite(configSetup, "sp", modes[currentMode].Speed);
   jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+  
+  sendAlarms(inputBuffer);  // Чтение настроек будильника при старте лампы
+  #ifdef GENERAL_DEBUG
+  LOG.print(F("\nDAWN_TIMEOUT=afer = "));
+  LOG.println ( DAWN_TIMEOUT );
+  #endif
 
   // WI-FI
   

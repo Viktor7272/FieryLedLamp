@@ -813,7 +813,7 @@ void sendAlarms(char *outputBuffer)
 		alarm_change = true;
 		jsonWrite(configAlarm, a, alarms[i].State);
 		jsonWrite(configAlarm, h, (alarms[i].Time / 60U));
-		jsonWrite(configAlarm, m, ((alarms[i].Time % 60U));
+		jsonWrite(configAlarm, m, (alarms[i].Time % 60U));
 	}
     sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)alarms[i].State); 
   }
@@ -837,6 +837,7 @@ void sendAlarms(char *outputBuffer)
     	LOG.println(configAlarm);
 	#endif
 	}
+  DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
 }
 
 void sendTimer(char *outputBuffer)
