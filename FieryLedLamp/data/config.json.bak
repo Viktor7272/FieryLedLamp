@@ -6,6 +6,7 @@
 "timezone":2,
 "Summer_Time":1,
 "favorit":0,
+"random_on":0,
 "ESP_mode":0,
 "time":"13:31:13",
 "print_time":0,
@@ -32,6 +33,5 @@
 "rnd_cycle":0,
 "time_eff":30,
 "disp":0,
-"random_on":0,
 "cycle_allwase":0
 }

@@ -25,72 +25,13 @@
    "type": "hr"
   },
   {
-   "type": "link",
-   "title": "Выбрать эффекты для Цикла",
-   "action": "/?cycle",
-   "class": "btn btn-block btn-primary"
-  },
-  {
    "type": "checkbox",
    "class": "checkbox-big",
-   "name": "cycle_on",
-   "title": "Вкл. Цикл ",
-   "style": "font-size:20px;display:block",
-   "state": "{{cycle_on}}",
-   "action": "cycle_on?cycle_on=[[cycle_on]]"
-  },
-  {
-   "type": "h4",
-   "title": "Дисперсия, сек.",
-   "style": "width:80%;float:left;display:block"
-  }, 
-  {
-   "type": "input",
-   "title": "секунд",
-   "name": "disp",
-   "state": "{{disp}}",
-   "pattern": "[0-9]{1,3}",
-   "style": "width:20%;display:block"
-  },
-  {
-   "type": "h4",
-   "title": "Время переключения эффектов, сек.",
-   "style": "width:80%;float:left;display:block"
-  }, 
-  {
-   "type": "input",
-   "title": "секунд",
-   "name": "time_eff",
-   "state": "{{time_eff}}",
-   "pattern": "[0-9]{1,3}",
-   "style": "width:20%;display:block"
-  },
-  {
-   "type": "button",
-   "title": "Сохранить",
-   "class": "btn btn-block btn-success",
-   "action": "time_eff?disp=[[disp]]&time_eff=[[time_eff]]"
-  },
-  {
-   "type": "hr"
-  },
-  {
-   "type": "checkbox",
-   "class": "checkbox-big",
-   "name": "rnd_cycle",
-   "title": "Перемешать выбранные",
-   "style": "font-size:20px;display:block",
-   "state": "{{rnd_cycle}}",
-   "action": "rnd_cycle?rnd_cycle=[[rnd_cycle]]"
-  },
-  {
-   "type": "checkbox",
-   "class": "checkbox-big",
-   "name": "random_on",
-   "title": "Случайный выбор настроек эффектов",
-   "style": "font-size:20px;display:block",
+   "name": "random",
+   "title": "Режим Random",
+   "style": "font-size:20px",
    "state": "{{random_on}}",
-   "action": "random_on?random_on=[[random_on]]"
+   "action": "random_on?random_on=[[random]]"
   },
   {
    "type": "button",
@@ -100,15 +41,6 @@
   },
   {
    "type": "hr"
-  },
-  {
-   "type": "checkbox",
-   "class": "checkbox-big",
-   "name": "cycle_allwase",
-   "title": "Вкл. Цикл после перезапуска лампы",
-   "style": "font-size:20px;display:block",
-   "state": "{{cycle_allwase}}",
-   "action": "cycle_allwase?cycle_allwase=[[cycle_allwase]]"
   },
   {
    "type": "checkbox",
@@ -187,7 +119,7 @@
   },
   {
    "type": "h4",
-   "title": "Яркость в ночное время 0-255",
+   "title": "Яркость в ночное время 1-255",
    "style": "display:nextline;float:left;"
   },
   {
@@ -213,7 +145,7 @@
   },
   {
    "type": "h4",
-   "title": "Яркость в дневное время 0-255",
+   "title": "Яркость в дневное время 1-255",
    "style": "display:nextline;float:left;"
   },
   {
@@ -287,15 +219,7 @@
    "title": "Установка будильника 'Рассвет'",
    "action": "/?alarm",
    "class": "btn btn-block btn-primary"
-  },
-  {
-   "type": "hr"
-  },
-  {
-   "type": "link",
-   "title": "Главная",
-   "action": "/",
-   "class": "btn btn-block btn-danger"
+
   }
  ]
 }

@@ -24,208 +24,169 @@
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a1",
-   "title": ". ",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a1}}",
-   "action": "a1?a1=[[a1]]"
-  },
-  {
-   "type": "h4",
-   "title": "Понедельник"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m1",
-   "state": "{{m1}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Понедельник",
+   "style": "font-size:20px; display:block",
+   "state": "{{a1}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h1",
    "state": "{{h1}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m1",
+   "state": "{{m1}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a2",
-   "title": ".",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a2}}",
-   "action": "a2?a2=[[a2]]"
-  },
-  {
-   "type": "h4",
-   "title": "Вторник"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m2",
-   "state": "{{m2}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Вторник",
+   "style": "font-size:20px; display:block",
+   "state": "{{a2}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h2",
    "state": "{{h2}}",
-   "style": "width:50%; float :right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m2",
+   "state": "{{m2}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a3",
-   "title": ". ",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a3}}",
-   "action": "a3?a3=[[a3]]"
-  },
-  {
-   "type": "h4",
-   "title": "Среда"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m3",
-   "state": "{{m3}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Среда",
+   "style": "font-size:20px; display:block",
+   "state": "{{a3}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h3",
    "state": "{{h3}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m3",
+   "state": "{{m3}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a4",
-   "title": ".",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a4}}",
-   "action": "a4?a4=[[a4]]"
-  },
-  {
-   "type": "h4",
-   "title": "Четверг"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m4",
-   "state": "{{m4}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Четверг",
+   "style": "font-size:20px; display:block",
+   "state": "{{a4}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h4",
    "state": "{{h4}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m4",
+   "state": "{{m4}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a5",
-   "title": ". ",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a5}}",
-   "action": "a5?a5=[[a5]]"
-  },
-  {
-   "type": "h4",
-   "title": "Пятница"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m5",
-   "state": "{{m5}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Пятница",
+   "style": "font-size:20px; display:block",
+   "state": "{{a5}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h5",
    "state": "{{h5}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m5",
+   "state": "{{m5}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a6",
-   "title": ".",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a6}}",
-   "action": "a6?a6=[[a6]]"
-  },
-  {
-   "type": "h4",
-   "title": "Суббота"
-  },
-  {
-   "type": "input",
-   "title": "Alarm",
-   "name": "m6",
-   "state": "{{m6}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
+   "title": "Суббота",
+   "style": "font-size:20px; display:block",
+   "state": "{{a6}}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "h6",
    "state": "{{h6}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
+  },
+  {
+   "type": "input",
+   "title": "Alarm",
+   "name": "m6",
+   "state": "{{m6}}",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "checkbox",
    "class": "checkbox-big",
    "name": "a7",
-   "title": ".",
-   "style": "font-size:20px; float : left; display:inline",
-   "state": "{{a7}}",
-   "action": "a7?a7=[[a7]]"
+   "title": "Воскресенье",
+   "style": "font-size:20px; display:block",
+   "state": "{{a7}}"
   },
   {
-   "type": "h4",
-   "title": "Воскресенье"
+   "type": "input",
+   "title": "Alarm",
+   "name": "h7",
+   "state": "{{h7}}",
+   "style": "width:50%; float : left",
+   "pattern": "[0-9]{1,2}"
   },
   {
    "type": "input",
    "title": "Alarm",
    "name": "m7",
    "state": "{{m7}}",
-   "style": "width:50%; float : right",
+   "style": "width:50%; display:block",
    "pattern": "[0-9]{1,2}"
-  },
-  {
-   "type": "input",
-   "title": "Час",
-   "name": "h7",
-   "state": "{{h7}}",
-   "style": "width:50%; float : right",
-   "pattern": "[0-9]{1,2}"
-  },
-  {
-   "type": "h4",
-   "title": "."
   },
   {
    "type": "h4",

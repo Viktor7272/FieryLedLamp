@@ -5,7 +5,7 @@
  "title": [
   {
    "type": "text",
-   "title": "Выбор эффектов 'Цикл'"
+   "title": "Установки режима 'Цикл'"
   }
  ],
  "class": "col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6",
@@ -13,8 +13,51 @@
   {
    "type": "link",
    "title": "Назад",
-   "action": "/?user_seting",
+   "action": "/",
    "class": "btn btn-block btn-primary"
+  },
+  {
+   "type": "hr"
+  },
+  {
+   "type": "h4",
+   "title": "Режим в процессе разработки."
+  }, 
+  {
+   "type": "checkbox",
+   "class": "checkbox-big",
+   "name": "cycle_on",
+   "title": "Вкл. Цикл ",
+   "style": "font-size:20px;display:block",
+   "state": "{{cycle_on}}",
+   "action": "cycle_on?cycle_on=[[cycle_on]]"
+  }, 
+  {
+   "type": "checkbox",
+   "class": "checkbox-big",
+   "name": "rnd_cycle",
+   "title": "Перемешать выбранные",
+   "style": "font-size:20px;display:block",
+   "state": "{{rnd_cycle}}",
+   "action": "rnd_cycle?rnd_cycle=[[rnd_cycle]]"
+  },
+  {
+   "type": "checkbox",
+   "class": "checkbox-big",
+   "name": "random",
+   "title": "Случайный выбор настроек эффектов",
+   "style": "font-size:20px;display:block",
+   "state": "{{random_on}}",
+   "action": "random_on?random_on=[[random]]"
+  },
+  {
+   "type": "checkbox",
+   "class": "checkbox-big",
+   "name": "random",
+   "title": "Вкл. Цикл после перезапуска лампы",
+   "style": "font-size:20px;display:block",
+   "state": "{{random_on}}",
+   "action": "random_on?random_on=[[random]]"
   },
   {
    "type": "hr"
@@ -23,7 +66,39 @@
    "type": "button",
    "title": "Сохранить",
    "class": "btn btn-block btn-success",
-   "action": "cycle_set?e0=[[e0]]&e1=[[e1]]&e2=[[e2]]&e3=[[e3]]&e4=[[e4]]&e5=[[e5]]&e6=[[e6]]&e7=[[e7]]&e8=[[e8]]&e9=[[e9]]&e10=[[e10]]&e11=[[e11]]&e12=[[e12]]&e13=[[e13]]&e14=[[e14]]&e15=[[e15]]&e16=[[e16]]&e17=[[e17]]&e18=[[e18]]&e19=[[e19]]&e20=[[e20]]&e21=[[e21]]&e22=[[e22]]&e23=[[e23]]&e24=[[e24]]&e25=[[e25]]&e26=[[e26]]&e27=[[e27]]&e28=[[e28]]&e29=[[e29]]&e30=[[e30]]&e31=[[e31]]&e32=[[e32]]&e33=[[e33]]&e34=[[e34]]&e35=[[e35]]&e36=[[e36]]&e37=[[e37]]&e38=[[e38]]&e39=[[e39]]&e40=[[e40]]&e41=[[e41]]&e42=[[e42]]&e43=[[e43]]&e44=[[e44]]&e45=[[e45]]&e46=[[e46]]&e47=[[e47]]&e48=[[e48]]&e49=[[e49]]&e50=[[e50]]&e51=[[e51]]&e52=[[e52]]&e53=[[e53]]&e54=[[e54]]&e55=[[e55]]&e56=[[e56]]&e57=[[e57]]&e58=[[e58]]&e59=[[e59]]&e60=[[e60]]&e61=[[e61]]&e62=[[e62]]&e63=[[e63]]&e64=[[e64]]&e65=[[e65]]&e66=[[e66]]&e67=[[e67]]&e68=[[e68]]&e69=[[e69]]&e70=[[e70]]&e71=[[e71]]&e72=[[e72]]&e73=[[e73]]&e74=[[e74]]&e75=[[e75]]&e76=[[e76]]&e77=[[e77]]&e78=[[e78]]&e79=[[e79]]&e80=[[e80]]&e81=[[e81]]&e82=[[e82]]&e83=[[e83]]&e84=[[e84]]&e85=[[e85]]&e86=[[e86]]&e87=[[e87]]&e88=[[e88]]&e89=[[e89]]&e90=[[e90]]"
+   "action": "favorites?e0=[[e0]]"
+  },
+  {
+   "type": "hr"
+  },
+  {
+   "type": "h4",
+   "title": "Дисперсия, сек.",
+   "style": "width:80%;float:left;display:block"
+  }, 
+  {
+   "type": "input",
+   "title": "секунд",
+   "name": "dip",
+   "state": "{{disp}}",
+   "pattern": "[0-9]{1,3}",
+   "style": "width:20%;display:block"
+  },
+  {
+   "type": "h4",
+   "title": "Время переключения эффектов, сек.",
+   "style": "width:80%;float:left;display:block"
+  }, 
+  {
+   "type": "input",
+   "title": "секунд",
+   "name": "tim_eff",
+   "state": "{{time_eff}}",
+   "pattern": "[0-9]{1,3}",
+   "style": "width:20%;display:block"
+  },
+  {
+   "type": "hr"
   },
   {
    "type": "button",
@@ -137,7 +212,7 @@
    "type": "button",
    "title": "Сохранить",
    "class": "btn btn-block btn-success",
-   "action": "cycle_set?e0=[[e0]]&e1=[[e1]]&e2=[[e2]]&e3=[[e3]]&e4=[[e4]]&e5=[[e5]]&e6=[[e6]]&e7=[[e7]]&e8=[[e8]]&e9=[[e9]]&e10=[[e10]]&e11=[[e11]]&e12=[[e12]]&e13=[[e13]]&e14=[[e14]]&e15=[[e15]]&e16=[[e16]]&e17=[[e17]]&e18=[[e18]]&e19=[[e19]]&e20=[[e20]]&e21=[[e21]]&e22=[[e22]]&e23=[[e23]]&e24=[[e24]]&e25=[[e25]]&e26=[[e26]]&e27=[[e27]]&e28=[[e28]]&e29=[[e29]]&e30=[[e30]]&e31=[[e31]]&e32=[[e32]]&e33=[[e33]]&e34=[[e34]]&e35=[[e35]]&e36=[[e36]]&e37=[[e37]]&e38=[[e38]]&e39=[[e39]]&e40=[[e40]]&e41=[[e41]]&e42=[[e42]]&e43=[[e43]]&e44=[[e44]]&e45=[[e45]]&e46=[[e46]]&e47=[[e47]]&e48=[[e48]]&e49=[[e49]]&e50=[[e50]]&e51=[[e51]]&e52=[[e52]]&e53=[[e53]]&e54=[[e54]]&e55=[[e55]]&e56=[[e56]]&e57=[[e57]]&e58=[[e58]]&e59=[[e59]]&e60=[[e60]]&e61=[[e61]]&e62=[[e62]]&e63=[[e63]]&e64=[[e64]]&e65=[[e65]]&e66=[[e66]]&e67=[[e67]]&e68=[[e68]]&e69=[[e69]]&e70=[[e70]]&e71=[[e71]]&e72=[[e72]]&e73=[[e73]]&e74=[[e74]]&e75=[[e75]]&e76=[[e76]]&e77=[[e77]]&e78=[[e78]]&e79=[[e79]]&e80=[[e80]]&e81=[[e81]]&e82=[[e82]]&e83=[[e83]]&e84=[[e84]]&e85=[[e85]]&e86=[[e86]]"
+   "action": "favorites?e0=[[e0]]"
   },
   
   {
@@ -146,7 +221,7 @@
   {
    "type": "link",
    "title": "Назад",
-   "action": "/?user_seting",
+   "action": "/",
    "class": "btn btn-block btn-primary"
   }
  ]

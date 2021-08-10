@@ -37,8 +37,6 @@ void User_setings (){
  HTTP.on("/rnd_cycle", handle_rnd_cycle);   // Перемешать выбранные или по порядку
  HTTP.on("/cycle_allwase", handle_cycle_allwase);   // Запускать режим цыкл после выкл/вкл лампы или нет
  HTTP.on("/cycle_set", handle_cycle_set);   // Выбор эффектов
- HTTP.on("/eff_all", handle_eff_all);   // Выбрать все
- HTTP.on("/eff_clr", handle_eff_clr);   // сбросить Выбор
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -411,8 +409,7 @@ void handle_time_eff ()  {  // Время переключения цикла + 
 
 void handle_rnd_cycle ()  {  // Перемешать выбранные или по порядку
 	jsonWrite(configSetup, "rnd_cycle", HTTP.arg("rnd_cycle").toInt());
-	FavoritesManager::rndCycle = jsonReadtoInt(configSetup, "rnd_cycle");
-	saveConfig();
+	FavoritesManager::rndCycle = jsonReadtoInt(configSetup, "rnd_cycle");	
 	HTTP.send(200, "text/plain", "OK");
 }
 
@@ -422,41 +419,13 @@ void handle_cycle_allwase ()  {  // Запускать режим цыкл по�
 	HTTP.send(200, "text/plain", "OK");
 }
 
-void handle_eff_all ()   {
-      char i[3];
-      String configCycle = readFile("cycle_config.json", 1024); 
-      // подготовка  строк с именами полей json 
-      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
-       itoa ((k), i, 10);
-          String e = "e" + String (i) ;
-           //сохранение параметров в строку
-        jsonWrite(configCycle, e, 1U);
-      }
-    writeFile("cycle_config.json", configCycle );
-    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
-}
-
-void handle_eff_clr ()   {
-      char i[3];
-      String configCycle = readFile("cycle_config.json", 1024); 
-      // подготовка  строк с именами полей json 
-      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
-       itoa ((k), i, 10);
-          String e = "e" + String (i) ;
-           //сохранение параметров в строку
-        jsonWrite(configCycle, e, 0U);
-      }
-    writeFile("cycle_config.json", configCycle );
-    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
-}
-
 void handle_cycle_set ()  {  // Выбор эффектов для Цикла 
       char i[3];
       String configCycle = readFile("cycle_config.json", 1024); 
-      #ifdef GENERAL_DEBUG
-      LOG.println ("\nВыбор эффектов для Цикла");
+  #ifdef GENERAL_DEBUG
+    LOG.println ("\nВыбор эффектов для Цикла");
       LOG.println(configCycle);
-      #endif
+  #endif
       // подготовка  строк с именами полей json file
       for (uint8_t k=0; k<MODE_AMOUNT; k++) {
        itoa ((k), i, 10);
@@ -465,13 +434,13 @@ void handle_cycle_set ()  {  // Выбор эффектов для Цикла
         jsonWrite(configCycle, e, HTTP.arg(e).toInt());
         //сохранение выбранных эффектов для Цикла
         FavoritesManager::FavoriteModes[k] = jsonReadtoInt(configCycle, e);
-        }
-     #ifdef GENERAL_DEBUG
-      LOG.println ("\nВыбор эффектов для Цикла после обработки");
-      LOG.println(configCycle);
-     #endif
-      FavoritesManager::SaveFavoritesToEeprom();
-      writeFile("cycle_config.json", configCycle );
+   }
+  #ifdef GENERAL_DEBUG
+        LOG.println ("\nВыбор эффектов для Цикла после обработки");
+        LOG.println(configCycle);
+  #endif
+  FavoritesManager::SaveFavoritesToEeprom();
+  writeFile("cycle_config.json", configCycle );
   //settChanged = true;
   //eepromTimeout = millis();
   
@@ -504,7 +473,8 @@ void cycle_get ()  {
 		LOG.println ("\nНовы выбор эффектов для Цикла сохранен в файл");
     	LOG.println(configCycle);
 	    #endif
-	  }	 
+	  }
+	 
 }
 	
 bool FileCopy (String SourceFile , String TargetFile)   {

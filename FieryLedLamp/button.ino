@@ -166,7 +166,7 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
-    TimerManager::TimeToFire = millis() + 5UL * 60UL * 1000UL;
+    TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER1 * 60UL * 1000UL;
     TimerManager::TimerRunning = true;
 	}
     #endif //BUTTON_CAN_SET_SLEEP_TIMER	
@@ -304,7 +304,7 @@ if (touch.isStep())
 		#ifdef USE_BLYNK
 		updateRemoteBlynkParams();
 		#endif
-		TimerManager::TimeToFire = millis() + 10UL * 60UL * 1000UL;
+		TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER2 * 60UL * 1000UL;
 		TimerManager::TimerRunning = true;
 		break;
 	  }
@@ -357,7 +357,7 @@ if (touch.isStep())
 		#ifdef USE_BLYNK
 		updateRemoteBlynkParams();
 		#endif
-		TimerManager::TimeToFire = millis() + 10UL * 60UL * 1000UL;
+		TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER2 * 60UL * 1000UL;
 		TimerManager::TimerRunning = true;
 		break;		
 	  }

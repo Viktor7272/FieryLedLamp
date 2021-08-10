@@ -123,20 +123,14 @@
    "type": "hr"
   },
   {
-   "type": "link",
-   "title": "Режим Цикл",
-   "action": "/?cycle",
-   "class": "btn btn-block btn-primary"
-  },
-  {
-   "type": "hr"
-  },
-  {
  "type": "link",
    "title": "Настройки пользователя",
  "action": "/index.htm?user_seting",
     "class": "btn btn-block btn-success"
   }, 
+  {
+   "type": "hr"
+  },
   {
    "type": "link",
    "title": "Начальные установки",

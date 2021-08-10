@@ -23,7 +23,7 @@ class FavoritesManager
     static uint8_t UseSavedFavoritesRunning;                // флаг, определяющий, нужно ли использовать сохранённое значение FavoritesRunning при перезапуске; еслин нет, "избранное" будет выключено при старте
     static uint8_t FavoriteModes[MODE_AMOUNT];              // массив, каждый элемент которого соответствует флагу "эффект №... добавлен в избранные"
     static uint32_t nextModeAt;                             // ближайшее время переключения на следующий избранный эффект (millis())
-	  static bool rndCycle;                                // Перемешивать цикл или нет
+	static uint8_t rndCycle;                                // Перемешивать цикл или нет
 
     static void SetStatus(char* statusText)                 // помещает в statusText состояние режима работы избранных эффектов
     {
@@ -316,8 +316,7 @@ class FavoritesManager
             result = i < MODE_AMOUNT ? i : i - MODE_AMOUNT;
             break;
           }
-        }
-		if (!rndCycle) break;
+        }        
       }
       return result;
     }

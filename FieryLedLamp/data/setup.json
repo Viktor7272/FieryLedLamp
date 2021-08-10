@@ -230,6 +230,12 @@
   },
   {
    "type": "hr"
+  },
+  {
+   "type": "link",
+   "title": "Главная",
+   "action": "/",
+   "class": "btn btn-block btn-danger"
   }
  ]
 }
