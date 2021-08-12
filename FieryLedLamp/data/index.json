@@ -65,14 +65,14 @@
    "type": "button",
    "title": "<",
    "action": "brm",
-   "class": "btn btn-block btn-primary",
+   "class": "btn-block btn-primary",
    "style": "width:10%;display:inline"
   },
 {
    "type": "button",
    "title": ">",
    "action": "brp",
-   "class": "btn btn-block btn-primary",
+   "class": "btn-block btn-primary",
    "style": "width:10%;float:right"
   },
   {
@@ -87,14 +87,14 @@
    "type": "button",
    "title": "<",
    "action": "spm",
-   "class": "btn btn-block btn-primary",
+   "class": " btn-block btn-primary",
    "style": "width:10%;display:inline"
   },
 {
    "type": "button",
    "title": ">",
    "action": "spp",
-   "class": "btn btn-block btn-primary",
+   "class": "btn-block btn-primary",
    "style": "width:10%;float:right"
   },
   {
@@ -109,15 +109,34 @@
    "type": "button",
    "title": "<",
    "action": "scm",
-   "class": "btn btn-block btn-primary",
+   "class": " btn-block btn-primary",
    "style": "width:10%;display:inline"
   },
 {
    "type": "button",
    "title": ">",
    "action": "scp",
-   "class": "btn btn-block btn-primary",
+   "class": " btn-block btn-primary",
    "style": "width:10%;float:right"
+  },
+  {
+   "type": "h3",
+  "style":"font-size:18px;display:block",
+  "title":" Настройки текущего эффекта"
+  },
+  {
+   "type": "button",
+   "title": "По умолчанию",
+   "action": "def",
+   "class": " btn-block btn-info",
+   "style": "width:50%;float:left;display:block"
+  },
+{
+   "type": "button",
+   "title": "Случайные",
+   "action": "rnd",
+   "class": " btn-block btn-info",
+   "style": "width:50%;display:block"
   },
   {
    "type": "hr"
@@ -125,8 +144,9 @@
   {
  "type": "link",
    "title": "Настройки пользователя",
- "action": "/index.htm?user_seting",
-    "class": "btn btn-block btn-success"
+  "action": "/index.htm?user_seting",
+    "class": "btn btn-block btn-success",
+    "style": "display:block"
   }, 
   {
    "type": "hr"

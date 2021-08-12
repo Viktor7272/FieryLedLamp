@@ -56,6 +56,8 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 void setModeSettings(uint8_t Scale = 0U, uint8_t Speed = 0U) {
   modes[currentMode].Scale = Scale ? Scale : pgm_read_byte(&defaultSettings[currentMode][2]);
   modes[currentMode].Speed = Speed ? Speed : pgm_read_byte(&defaultSettings[currentMode][1]);
+  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+  jsonWrite(configSetup, "sc", modes[currentMode].Scale);  
   selectedSettings = 0U;
 #ifdef USE_BLYNK
   updateRemoteBlynkParams();

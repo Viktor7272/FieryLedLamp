@@ -193,7 +193,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         ONflag = false;
 		jsonWrite(configSetup, "Power", ONflag);
         settChanged = true;
-        eepromTimeout = millis();
+        eepromTimeout = millis() + EEPROM_WRITE_DELAY;
         changePower();
         sendCurrent(inputBuffer);
 

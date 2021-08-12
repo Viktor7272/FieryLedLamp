@@ -33,7 +33,8 @@ void buttonTick()
       changePower();
     }
     settChanged = true;
-    eepromTimeout = millis();
+    if (ONflag)   eepromTimeout = millis();
+    else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
     loadingFlag = true;
 
     #if (USE_MQTT)

@@ -39,6 +39,9 @@ void User_setings (){
  HTTP.on("/cycle_set", handle_cycle_set);   // Выбор эффектов
  HTTP.on("/eff_all", handle_eff_all);   // Выбрать все
  HTTP.on("/eff_clr", handle_eff_clr);   // сбросить Выбор
+ HTTP.on("/timer", handle_timer);   // Запуск таймера выключения
+ HTTP.on("/def", handle_def);   //
+ HTTP.on("/rnd", handle_rnd);   //
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -329,6 +332,9 @@ void handle_Power ()  {
 	//saveConfig(); 
 	ONflag = jsonReadtoInt(configSetup, "Power");
 	changePower();
+    if (ONflag)   eepromTimeout = millis();
+    else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
+    settChanged = true;  
 	HTTP.send(200, "text/plain", "OK");
 }	
 
@@ -370,7 +376,7 @@ void handle_alarm ()  {
 	#endif
   	  // подготовка  строк с именами полей json file
   	  for (uint8_t k=0; k<7; k++) {
-   	   itoa ((k+1), i, 10);
+   	      itoa ((k+1), i, 10);
     	   //i[1] = 0;
       	  String a = "a" + String (i) ;
       	  String h = "h" + String (i) ;
@@ -383,14 +389,14 @@ void handle_alarm ()  {
      	  alarms[k].State = (jsonReadtoInt(configAlarm, a));
      	  alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
      	  EepromManager::SaveAlarmsSettings(&k, alarms);
-   }
+     }
 	jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());
 	jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
 	dawnMode = jsonReadtoInt(configAlarm, "t")-1;
 	DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
 	EepromManager::SaveDawnMode(&dawnMode);
-  	writeFile("alarm_config.json", configAlarm );
-  	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+  writeFile("alarm_config.json", configAlarm );
+  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 
@@ -469,7 +475,7 @@ void handle_cycle_set ()  {  // Выбор эффектов для Цикла
      #ifdef GENERAL_DEBUG
       LOG.println ("\nВыбор эффектов для Цикла после обработки");
       LOG.println(configCycle);
-     #endif
+     #endif     
       FavoritesManager::SaveFavoritesToEeprom();
       writeFile("cycle_config.json", configCycle );
   //settChanged = true;
@@ -505,6 +511,25 @@ void cycle_get ()  {
     	LOG.println(configCycle);
 	    #endif
 	  }	 
+}
+
+void handle_timer ()   {
+    jsonWrite(configSetup, "timer", HTTP.arg("timer").toInt());
+    TimerManager::TimeToFire = millis() + jsonReadtoInt(configSetup, "timer") * 60UL * 1000UL;
+    TimerManager::TimerRunning = true;    
+    HTTP.send(200, "application/json", "{\"title\":\"Запущен\",\"class\":\"btn btn-block btn-warning\"}");
+}
+
+void handle_def ()   {
+    setModeSettings();
+    updateSets();    
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
+
+void handle_rnd ()   {
+    selectedSettings = 1U;
+    updateSets();
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 	
 bool FileCopy (String SourceFile , String TargetFile)   {

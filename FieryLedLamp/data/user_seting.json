@@ -131,7 +131,7 @@
    "title": "run_text",
    "name": "run_text",
    "state": "{{run_text}}",
-   "style": "width:50%;display:inline",
+   "style": "width:50%;float:left",
    "pattern": ".{1,42}"
   },
   {
@@ -139,7 +139,7 @@
    "title": "Сохранить",
    "action": "run_text?run_text=[[run_text]]",
    "class": "btn btn-block btn-success",
-   "style": "width:50%;display:inline"
+   "style": "width:50%;display:block"
   },
   {
    "type": "hr"
@@ -153,14 +153,14 @@
    "title": "Вывод времени",
    "name": "print_time",
    "state": "{{print_time}}",
-   "style": "width:30%;display:inline",
+   "style": "width:30%;float:left",
    "pattern": "[0-9]{1,2}"
   },
   {
    "type": "button",
    "title": "Сохранить",
    "class": "btn btn-block btn-success",
-   "style": "width:70%;display:inline",
+   "style": "width:70%;display:block",
    "action": "print_time?print_time=[[print_time]]"
   },
   {
@@ -229,6 +229,30 @@
    "title": "Сохранить",
    "class": "btn btn-block btn-success",
    "action": "night_time?night_time=[[night_time]]&night_bright=[[night_bright]]&day_time=[[day_time]]&day_bright=[[day_bright]]"
+  },
+  {
+   "type": "hr"
+  },
+  {
+   "type": "h4",
+   "title": "Таймер выключения 1-999 мин."
+  },
+  {
+   "type": "input",
+   "title": "timer",
+   "name": "timer",
+   "state": "{{timer}}",
+   "style": "width:50%;float:left",
+   "pattern": "[0-9]{1,3}"
+  },
+  {
+   "type": "button",
+   "title": "Запустить",
+   "name": "Btimer",
+   "response":"[[Btimer]]",
+   "action": "timer?timer=[[timer]]",
+   "class": "btn btn-block btn-success",
+   "style": "width:50%;display:block"
   },
   {
    "type": "hr"

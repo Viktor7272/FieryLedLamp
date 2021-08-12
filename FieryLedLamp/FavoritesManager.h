@@ -277,14 +277,14 @@ class FavoritesManager
     }
 
 #ifdef USE_SHUFFLE_FAVORITES
-    static uint8_t getNextFavoriteMode(uint8_t* currentMode)  // возвращает следующий (случайный) включенный в избранные эффект
-    {
+    static uint8_t getNextFavoriteMode(uint8_t* currentMode)   {  // возвращает следующий (случайный) включенный в избранные эффект
       uint8_t result;
       uint8_t count = MODE_AMOUNT;// считаем в этом счётчике, есть ли вообще в наличии избранные режимы. хотя бы два
       do {
         shuffleCurrentIndex++;
         if (shuffleCurrentIndex >= MODE_AMOUNT){        // если достигнут предел количества режимов
           count = MODE_AMOUNT;// считаем в этом счётчике, есть ли вообще в наличии избранные режимы, кроме одного
+         if (rndCycle)   {
           for (uint8_t i = 0; i < MODE_AMOUNT; i++){    // перемешиваем режимы
             //swap(shuffleFavoriteModes[i], shuffleFavoriteModes[random8(MODE_AMOUNT)]); одной строчкой не получилось поменять местами
             uint8_t j = random8(MODE_AMOUNT);
@@ -294,6 +294,11 @@ class FavoritesManager
             if (FavoriteModes[i] == 0) // заодно считаем, вдруг нет избранных режимов, кроме одного
               count--;
           }
+         } 
+        else {                                                                                                                               //<<<<<<< 2
+          for (uint8_t i = 0; i < MODE_AMOUNT; i++)     //расставляем очередь по порядку, начиная от текущего эффекта                           //<<<<<<< 3
+          shuffleFavoriteModes[i] = (*currentMode + i + 1U) % MODE_AMOUNT;                                                                     //<<<<<<< 4
+        }                                                                                                                                      //<<<<<<< 5
           shuffleCurrentIndex = 0;
         }
       } while ((FavoriteModes[shuffleFavoriteModes[shuffleCurrentIndex]] == 0U || shuffleFavoriteModes[shuffleCurrentIndex] == *currentMode) && count > 1U);
