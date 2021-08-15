@@ -193,7 +193,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         ONflag = false;
 		jsonWrite(configSetup, "Power", ONflag);
         settChanged = true;
-        eepromTimeout = millis();
+        eepromTimeout = millis() + EEPROM_WRITE_DELAY;
         changePower();
         sendCurrent(inputBuffer);
 
@@ -320,6 +320,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         FavoritesManager::SetStatus(inputBuffer);
         settChanged = true;
         eepromTimeout = millis();
+        jsonWrite(configSetup, "cycle_on", FavoritesManager::FavoritesRunning);  // чтение состояния настроек режима Цикл 
+        jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
+        jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
+        jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
+        cycle_get();  // чтение выбранных эффектов
 
         #if (USE_MQTT)
         if (espMode == 1U)

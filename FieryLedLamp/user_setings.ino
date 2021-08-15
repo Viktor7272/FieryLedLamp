@@ -8,7 +8,6 @@ void User_setings (){
  //HTTP.on("/User_set", handle_User_set); // Сохранение random_on, time_always, button_on и favorit в EEPROM (Файл)
  HTTP.on("/ESP_mode", handle_ESP_mode); // Установка ESP Mode
  HTTP.on("/eff_reset", handle_eff_reset);  //сброс настроек эффектов по умолчанию
- 
  HTTP.on("/run_text", handle_run_text);  // Текст для бегущей строки
  HTTP.on("/night_time", handle_night_time);  // Параметры вывода времени бегущей строкой на ВЫключенной лампе (яркость и время день,ночь) 
  HTTP.on("/effect_always", handle_effect_always);  // Не возобновлять работу эффектов
@@ -32,6 +31,16 @@ void User_setings (){
  HTTP.on("/time_always", handle_time_always);     // Выводить или нет время бегущей строкой(если задано) на не активной лампе
  HTTP.on("/timeZone", handle_time_zone);    // Установка смещения времени относительно GMT.
  HTTP.on("/alarm", handle_alarm);   // Установка будильника "рассвет"
+ HTTP.on("/cycle_on", handle_cycle_on);   // Вкл/выкл режима Цикл
+ HTTP.on("/time_eff", handle_time_eff);   // Время переключения цикла + Dispersion добавочное случайное время от 0 до disp
+ HTTP.on("/rnd_cycle", handle_rnd_cycle);   // Перемешать выбранные или по порядку
+ HTTP.on("/cycle_allwase", handle_cycle_allwase);   // Запускать режим цыкл после выкл/вкл лампы или нет
+ HTTP.on("/cycle_set", handle_cycle_set);   // Выбор эффектов
+ HTTP.on("/eff_all", handle_eff_all);   // Выбрать все
+ HTTP.on("/eff_clr", handle_eff_clr);   // сбросить Выбор
+ HTTP.on("/timer", handle_timer);   // Запуск таймера выключения
+ HTTP.on("/def", handle_def);   //  Установка настроек эффекта по умолчанию
+ HTTP.on("/rnd", handle_rnd);   // Установка случайных настроек эффектов
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -311,8 +320,8 @@ void handle_PassOn ()   {
 	bool flg = false;
 	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
 	saveConfig();
-	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json" , "/setup.json");
-	else flg = FileCopy ("/stp/stp_nl.json" , "/setup.json");
+	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json.gz" , "/setup.json.gz");
+	else flg = FileCopy ("/stp/stp_nl.json.gz" , "/setup.json.gz");
 	if (flg) HTTP.send(200, "text/plain", "OK");
 	else HTTP.send(404, "text/plain", "File not found");  
 }
@@ -322,6 +331,9 @@ void handle_Power ()  {
 	//saveConfig(); 
 	ONflag = jsonReadtoInt(configSetup, "Power");
 	changePower();
+    if (ONflag)   eepromTimeout = millis();
+    else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
+    settChanged = true;  
 	HTTP.send(200, "text/plain", "OK");
 }	
 
@@ -363,8 +375,8 @@ void handle_alarm ()  {
 	#endif
   	  // подготовка  строк с именами полей json file
   	  for (uint8_t k=0; k<7; k++) {
-   	   itoa ((k+1), i, 10);
-    	   i[1] = 0;
+   	      itoa ((k+1), i, 10);
+    	   //i[1] = 0;
       	  String a = "a" + String (i) ;
       	  String h = "h" + String (i) ;
      	    String m = "m" + String (i) ;
@@ -376,16 +388,148 @@ void handle_alarm ()  {
      	  alarms[k].State = (jsonReadtoInt(configAlarm, a));
      	  alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
      	  EepromManager::SaveAlarmsSettings(&k, alarms);
-   }
+     }
 	jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());
 	jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
 	dawnMode = jsonReadtoInt(configAlarm, "t")-1;
 	DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
 	EepromManager::SaveDawnMode(&dawnMode);
-  	writeFile("alarm_config.json", configAlarm );
-  	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+  writeFile("alarm_config.json", configAlarm );
+  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
+
+
+void handle_cycle_on()  {  // Вкл/выкл режима Цикл
+	jsonWrite(configSetup, "cycle_on", HTTP.arg("cycle_on").toInt());
+	FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");	
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_time_eff ()  {  // Время переключения цикла + Dispersion добавочное случайное время от 0 до disp
+	jsonWrite(configSetup, "time_eff", HTTP.arg("time_eff").toInt());
+	FavoritesManager::Interval = jsonReadtoInt(configSetup, "time_eff");	
+	jsonWrite(configSetup, "disp", HTTP.arg("disp").toInt());
+	FavoritesManager::Dispersion = jsonReadtoInt(configSetup, "disp");	
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_rnd_cycle ()  {  // Перемешать выбранные или по порядку
+	jsonWrite(configSetup, "rnd_cycle", HTTP.arg("rnd_cycle").toInt());
+	FavoritesManager::rndCycle = jsonReadtoInt(configSetup, "rnd_cycle");
+	saveConfig();
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_cycle_allwase ()  {  // Запускать режим цыкл после выкл/вкл лампы или нет
+	jsonWrite(configSetup, "cycle_allwase", HTTP.arg("cycle_allwase").toInt());
+	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");	
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_eff_all ()   {
+      char i[3];
+      String configCycle = readFile("cycle_config.json", 1024); 
+      // подготовка  строк с именами полей json 
+      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
+       itoa ((k), i, 10);
+          String e = "e" + String (i) ;
+           //сохранение параметров в строку
+        jsonWrite(configCycle, e, 1U);
+      }
+    writeFile("cycle_config.json", configCycle );
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
+
+void handle_eff_clr ()   {
+      char i[3];
+      String configCycle = readFile("cycle_config.json", 1024); 
+      // подготовка  строк с именами полей json 
+      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
+       itoa ((k), i, 10);
+          String e = "e" + String (i) ;
+           //сохранение параметров в строку
+        jsonWrite(configCycle, e, 0U);
+      }
+    writeFile("cycle_config.json", configCycle );
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
+
+void handle_cycle_set ()  {  // Выбор эффектов для Цикла 
+      char i[3];
+      String configCycle = readFile("cycle_config.json", 1024); 
+      #ifdef GENERAL_DEBUG
+      LOG.println ("\nВыбор эффектов для Цикла");
+      LOG.println(configCycle);
+      #endif
+      // подготовка  строк с именами полей json file
+      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
+       itoa ((k), i, 10);
+          String e = "e" + String (i) ;
+           //сохранение параметров в строку
+        jsonWrite(configCycle, e, HTTP.arg(e).toInt());
+        //сохранение выбранных эффектов для Цикла
+        FavoritesManager::FavoriteModes[k] = jsonReadtoInt(configCycle, e);
+        }
+     #ifdef GENERAL_DEBUG
+      LOG.println ("\nВыбор эффектов для Цикла после обработки");
+      LOG.println(configCycle);
+     #endif     
+      FavoritesManager::SaveFavoritesToEeprom();
+      writeFile("cycle_config.json", configCycle );
+  //settChanged = true;
+  //eepromTimeout = millis();
+  
+  HTTP.send(200, "text/plain", "OK");   
+}
+
+void cycle_get ()  { 
+      char i[3];
+	  bool cycle_change = false;
+      String configCycle = readFile("cycle_config.json", 1024); 
+      #ifdef GENERAL_DEBUG
+      LOG.println ("\nВыбор эффектов для Цикла");
+      LOG.println(configCycle);
+      #endif
+      // подготовка  строк с именами полей json file
+      for (uint8_t k=0; k<MODE_AMOUNT; k++) {
+         itoa ((k), i, 10);
+         String e = "e" + String (i) ;
+           //передача параметров из массива в строку json если значение в памяти не равно значению в файле
+		  if (FavoritesManager::FavoriteModes[k] != jsonReadtoInt(configCycle, e)) 
+		  {
+			jsonWrite(configCycle, e, FavoritesManager::FavoriteModes[k]);
+			cycle_change = true;
+		  }
+        
+		}
+	if (cycle_change)	{
+	    writeFile("cycle_config.json", configCycle );
+	    #ifdef GENERAL_DEBUG
+		LOG.println ("\nНовы выбор эффектов для Цикла сохранен в файл");
+    	LOG.println(configCycle);
+	    #endif
+	  }	 
+}
+
+void handle_timer ()   {
+    jsonWrite(configSetup, "timer", HTTP.arg("timer").toInt());
+    TimerManager::TimeToFire = millis() + jsonReadtoInt(configSetup, "timer") * 60UL * 1000UL;
+    TimerManager::TimerRunning = true;    
+    HTTP.send(200, "application/json", "{\"title\":\"Запущен\",\"class\":\"btn btn-block btn-warning\"}");
+}
+
+void handle_def ()   {
+    setModeSettings();
+    updateSets();    
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
+
+void handle_rnd ()   {
+    selectedSettings = 1U;
+    updateSets();
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
 	
 bool FileCopy (String SourceFile , String TargetFile)   {
   File S_File = SPIFFS.open( SourceFile, "r");

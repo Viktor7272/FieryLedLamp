@@ -171,6 +171,7 @@ uint16_t FavoritesManager::Dispersion = DEFAULT_FAVORITES_DISPERSION;
 uint8_t FavoritesManager::UseSavedFavoritesRunning = 0;
 uint8_t FavoritesManager::FavoriteModes[MODE_AMOUNT] = {0};
 uint32_t FavoritesManager::nextModeAt = 0UL;
+bool FavoritesManager::rndCycle = false;
 
 //bool CaptivePortalManager::captivePortalCalled = false;
 
@@ -246,6 +247,7 @@ void setup()  //================================================================
   NIGHT_HOURS_STOP = 60U * jsonReadtoInt(configSetup, "day_time");
   DAY_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "day_bright");
   DONT_TURN_ON_AFTER_SHUTDOWN = jsonReadtoInt(configSetup, "effect_always"); 
+  FavoritesManager::rndCycle = jsonReadtoInt(configSetup, "rnd_cycle");  // Перемешать Цикл
   AUTOMATIC_OFF_TIME = (5 * 60UL * 60UL * 1000UL) * ( uint32_t )(jsonReadtoInt(configSetup, "timer5h"));  
   #ifdef USE_NTP
   (jsonRead(configSetup, "ntp")).toCharArray (NTP_ADDRESS, (jsonRead(configSetup, "ntp")).length()+1);
@@ -321,13 +323,19 @@ void setup()  //================================================================
     &(FavoritesManager::SaveFavoritesToEeprom),
     &(restoreSettings)); // не придумал ничего лучше, чем делать восстановление настроек по умолчанию в обработчике инициализации EepromManager
 
-  jsonWrite(configSetup, "Power", ONflag);
+  jsonWrite(configSetup, "Power", ONflag);  // Чтение состояния лампы вкл/выкл,текущий эффект,яркость,скорость,масштаб
   jsonWrite(configSetup, "eff_sel", currentMode);
   jsonWrite(configSetup, "br", modes[currentMode].Brightness);
   jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+  jsonWrite(configSetup, "sc", modes[currentMode].Scale); 
+  sendAlarms(inputBuffer);                                                 // Чтение настроек будильника при старте лампы
+  jsonWrite(configSetup, "cycle_on", FavoritesManager::FavoritesRunning);  // чтение состояния настроек режима Цикл 
+  jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
+  jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
+  jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
+  cycle_get();  // чтение выбранных эффектов
+
   
-  sendAlarms(inputBuffer);  // Чтение настроек будильника при старте лампы
   #ifdef GENERAL_DEBUG
   LOG.print(F("\nDAWN_TIMEOUT=afer = "));
   LOG.println ( DAWN_TIMEOUT );
