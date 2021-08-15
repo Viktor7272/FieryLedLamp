@@ -8,7 +8,6 @@ void User_setings (){
  //HTTP.on("/User_set", handle_User_set); // Сохранение random_on, time_always, button_on и favorit в EEPROM (Файл)
  HTTP.on("/ESP_mode", handle_ESP_mode); // Установка ESP Mode
  HTTP.on("/eff_reset", handle_eff_reset);  //сброс настроек эффектов по умолчанию
- 
  HTTP.on("/run_text", handle_run_text);  // Текст для бегущей строки
  HTTP.on("/night_time", handle_night_time);  // Параметры вывода времени бегущей строкой на ВЫключенной лампе (яркость и время день,ночь) 
  HTTP.on("/effect_always", handle_effect_always);  // Не возобновлять работу эффектов
@@ -40,8 +39,8 @@ void User_setings (){
  HTTP.on("/eff_all", handle_eff_all);   // Выбрать все
  HTTP.on("/eff_clr", handle_eff_clr);   // сбросить Выбор
  HTTP.on("/timer", handle_timer);   // Запуск таймера выключения
- HTTP.on("/def", handle_def);   //
- HTTP.on("/rnd", handle_rnd);   //
+ HTTP.on("/def", handle_def);   //  Установка настроек эффекта по умолчанию
+ HTTP.on("/rnd", handle_rnd);   // Установка случайных настроек эффектов
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -321,8 +320,8 @@ void handle_PassOn ()   {
 	bool flg = false;
 	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
 	saveConfig();
-	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json" , "/setup.json");
-	else flg = FileCopy ("/stp/stp_nl.json" , "/setup.json");
+	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json.gz" , "/setup.json.gz");
+	else flg = FileCopy ("/stp/stp_nl.json.gz" , "/setup.json.gz");
 	if (flg) HTTP.send(200, "text/plain", "OK");
 	else HTTP.send(404, "text/plain", "File not found");  
 }

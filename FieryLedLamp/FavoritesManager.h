@@ -295,10 +295,13 @@ class FavoritesManager
               count--;
           }
          } 
-        else {                                                                                                                               //<<<<<<< 2
-          for (uint8_t i = 0; i < MODE_AMOUNT; i++)     //расставляем очередь по порядку, начиная от текущего эффекта                           //<<<<<<< 3
-          shuffleFavoriteModes[i] = (*currentMode + i + 1U) % MODE_AMOUNT;                                                                     //<<<<<<< 4
-        }                                                                                                                                      //<<<<<<< 5
+        else   {
+          for (uint8_t i = 0; i < MODE_AMOUNT; i++)   {     //расставляем очередь по порядку, начиная от текущего эффекта
+          shuffleFavoriteModes[i] = (*currentMode + i + 1U) % MODE_AMOUNT;
+          if (FavoriteModes[i] == 0) // заодно считаем, вдруг нет избранных режимов, кроме одного
+            count--;
+          }
+        }
           shuffleCurrentIndex = 0;
         }
       } while ((FavoriteModes[shuffleFavoriteModes[shuffleCurrentIndex]] == 0U || shuffleFavoriteModes[shuffleCurrentIndex] == *currentMode) && count > 1U);
