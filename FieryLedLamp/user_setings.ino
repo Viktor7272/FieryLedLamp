@@ -41,6 +41,7 @@ void User_setings (){
  HTTP.on("/timer", handle_timer);   // Запуск таймера выключения
  HTTP.on("/def", handle_def);   //  Установка настроек эффекта по умолчанию
  HTTP.on("/rnd", handle_rnd);   // Установка случайных настроек эффектов
+ HTTP.on("/all_br", handle_all_br);  // Общая яркость
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -530,7 +531,20 @@ void handle_rnd ()   {
     updateSets();
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
-	
+
+void handle_all_br ()   {
+    jsonWrite(configSetup, "all_br", HTTP.arg("all_br").toInt());
+    uint8_t ALLbri = jsonReadtoInt(configSetup, "all_br");
+    for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
+        modes[i].Brightness = ALLbri;    
+      }
+    jsonWrite(configSetup, "br", ALLbri);
+    FastLED.setBrightness(ALLbri);
+    loadingFlag = true;
+    LOG.println (ALLbri);
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+}
+  
 bool FileCopy (String SourceFile , String TargetFile)   {
   File S_File = SPIFFS.open( SourceFile, "r");
   File T_File = SPIFFS.open( TargetFile, "w");
