@@ -117,6 +117,9 @@ class FavoritesManager
 		jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
 		jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
 		jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif //USE_MULTIPLE_LAMPS_CONTROL
         *loadingFlag = true;
         nextModeAt = getNextTime();
 

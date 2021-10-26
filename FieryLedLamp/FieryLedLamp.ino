@@ -187,8 +187,11 @@ uint8_t time_always;
 bool connect = false;
 uint32_t lastResolveTryMoment = 0xFFFFFFFFUL;
 uint8_t ESP_CONN_TIMEOUT;
-uint8_t PRINT_TIME ; 
-
+uint8_t PRINT_TIME ;
+#ifdef USE_MULTIPLE_LAMPS_CONTROL
+char Host1[16], Host2[16], Host3[16];
+uint8_t ml1, ml2, ml3;
+#endif //USE_MULTIPLE_LAMPS_CONTROL
 
 
 
@@ -334,7 +337,9 @@ void setup()  //================================================================
   jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
   jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
   cycle_get();  // чтение выбранных эффектов
-
+#ifdef USE_MULTIPLE_LAMPS_CONTROL  
+  multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
+#endif //USE_MULTIPLE_LAMPS_CONTROL
   
   #ifdef GENERAL_DEBUG
   LOG.print(F("\nDAWN_TIMEOUT=afer = "));
