@@ -1,6 +1,5 @@
-void User_setings (){
-
-
+void User_setings ()  {
+    
  HTTP.on("/favorit", handle_favorit);    // включить \ выключить переход кнопкой только по эффектам из выбранных в режиме Цикл и
  HTTP.on("/random_on", handle_random);  // случайных настроек эффектов в режиме цикл без сохранения в EEPROM
  HTTP.on("/print_time", handle_print_time); //Периодичность вывода времени бегущей строкой
@@ -42,6 +41,11 @@ void User_setings (){
  HTTP.on("/def", handle_def);   //  Установка настроек эффекта по умолчанию
  HTTP.on("/rnd", handle_rnd);   // Установка случайных настроек эффектов
  HTTP.on("/all_br", handle_all_br);  // Общая яркость
+ #ifdef USE_MULTIPLE_LAMPS_CONTROL
+ HTTP.on("/multi", handle_multiple_lamp);  // Настройка управления несколькими лампами
+ #endif //USE_MULTIPLE_LAMPS_CONTROL
+ HTTP.on("/eff_save", handle_eff_save);  // Сохранить настройки эффектов в файл
+ HTTP.on("/eff_read", handle_eff_read);  // Загрузить настройки эффектов из файла
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -111,11 +115,15 @@ void handle_ESP_mode() {
 void handle_eff_reset() {    
     restoreSettings();
     updateSets();
+    loadingFlag = true;  // Перезапуск Эффекта
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	jsonWrite(configSetup, "sc", modes[currentMode].Scale);    
     showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
-  HTTP.send(200, "text/plain", "OK");
+    HTTP.send(200, "text/plain", "OK");
  }
 
 void handle_run_text ()  {
@@ -182,12 +190,15 @@ void handle_eff_sel () {
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
-	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL   
 }
 
 void handle_eff () {
 	jsonWrite(configSetup, "eff", HTTP.arg("eff").toInt());
-	if (jsonReadtoInt(configSetup, "eff"))  {
+	if (HTTP.arg("eff").toInt())  {
 	  if (++currentMode >= MODE_AMOUNT) currentMode = 0;
 	  jsonWrite(configSetup, "eff_sel", currentMode);
 	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
@@ -233,6 +244,9 @@ void handle_eff () {
 		#endif
 	}
 	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); 
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_br ()  {
@@ -242,7 +256,10 @@ void handle_br ()  {
     #ifdef GENERAL_DEBUG
     LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
     #endif
-	 HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  
+	 HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); 
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL    
 }
 
 void handle_sp ()  {
@@ -253,6 +270,9 @@ void handle_sp ()  {
     LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
     #endif
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_sc ()  {
@@ -263,6 +283,9 @@ void handle_sc ()  {
     LOG.printf_P(PSTR("Новое значение Мфыштаба / Цвета: %d\n"), modes[currentMode].Scale);
     #endif
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL       
 }
 
 void handle_brm ()   {
@@ -270,6 +293,9 @@ void handle_brm ()   {
 	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
 	FastLED.setBrightness(modes[currentMode].Brightness);
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL    
 }
 
 void handle_brp ()   {
@@ -277,6 +303,9 @@ void handle_brp ()   {
 	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
 	FastLED.setBrightness(modes[currentMode].Brightness);
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_spm ()   {
@@ -284,6 +313,9 @@ void handle_spm ()   {
 	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
 	loadingFlag = true;  // Перезапуск Эффекта
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_spp ()   {
@@ -291,6 +323,9 @@ void handle_spp ()   {
 	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
 	loadingFlag = true;  // Перезапуск Эффекта
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_scm ()   {
@@ -298,6 +333,9 @@ void handle_scm ()   {
 	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
 	loadingFlag = true;  // Перезапуск Эффекта
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_scp ()   {
@@ -305,6 +343,9 @@ void handle_scp ()   {
 	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
 	loadingFlag = true;  // Перезапуск Эффекта
 	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
 void handle_tm ()   {
@@ -336,6 +377,9 @@ void handle_Power ()  {
     else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
     settChanged = true;  
 	HTTP.send(200, "text/plain", "OK");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }	
 
 void handle_summer_time() {
@@ -428,7 +472,7 @@ void handle_cycle_allwase ()  {  // Запускать режим цыкл по�
 	HTTP.send(200, "text/plain", "OK");
 }
 
-void handle_eff_all ()   {
+void handle_eff_all ()   {  //Выбрать все эффекты
       char i[3];
       String configCycle = readFile("cycle_config.json", 1024); 
       // подготовка  строк с именами полей json 
@@ -442,7 +486,7 @@ void handle_eff_all ()   {
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
-void handle_eff_clr ()   {
+void handle_eff_clr ()   {  //очостить все эффекты
       char i[3];
       String configCycle = readFile("cycle_config.json", 1024); 
       // подготовка  строк с именами полей json 
@@ -484,7 +528,7 @@ void handle_cycle_set ()  {  // Выбор эффектов для Цикла
   HTTP.send(200, "text/plain", "OK");   
 }
 
-void cycle_get ()  { 
+void cycle_get ()  { // Начальная инициализация выбранных эффектов из файла при включении питания
       char i[3];
 	  bool cycle_change = false;
       String configCycle = readFile("cycle_config.json", 1024); 
@@ -513,26 +557,32 @@ void cycle_get ()  {
 	  }	 
 }
 
-void handle_timer ()   {
+void handle_timer ()   {  // Установка таймера выключения
     jsonWrite(configSetup, "timer", HTTP.arg("timer").toInt());
     TimerManager::TimeToFire = millis() + jsonReadtoInt(configSetup, "timer") * 60UL * 1000UL;
     TimerManager::TimerRunning = true;    
     HTTP.send(200, "application/json", "{\"title\":\"Запущен\",\"class\":\"btn btn-block btn-warning\"}");
 }
 
-void handle_def ()   {
+void handle_def ()   { // Сброс настроек текущего эффекта по умолчанию
     setModeSettings();
     updateSets();    
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
-void handle_rnd ()   {
+void handle_rnd ()   { // Установка случайных настроек текущему эффекту
     selectedSettings = 1U;
     updateSets();
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }
 
-void handle_all_br ()   {
+void handle_all_br ()   {  //Общая яркость
     jsonWrite(configSetup, "all_br", HTTP.arg("all_br").toInt());
     uint8_t ALLbri = jsonReadtoInt(configSetup, "all_br");
     for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
@@ -541,8 +591,165 @@ void handle_all_br ()   {
     jsonWrite(configSetup, "br", ALLbri);
     FastLED.setBrightness(ALLbri);
     loadingFlag = true;
-    LOG.println (ALLbri);
+    //LOG.println (ALLbri);
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
+}
+
+#ifdef USE_MULTIPLE_LAMPS_CONTROL
+
+void handle_multiple_lamp () {
+    String str;
+    String configMultilamp = readFile("multilamp_config.json", 512);
+    jsonWrite(configMultilamp, "ml1", HTTP.arg("ml1").toInt());
+    jsonWrite(configMultilamp, "ml2", HTTP.arg("ml2").toInt());
+    jsonWrite(configMultilamp, "ml3", HTTP.arg("ml3").toInt());
+    jsonWrite(configMultilamp, "host1", HTTP.arg("host1"));
+    jsonWrite(configMultilamp, "host2", HTTP.arg("host2"));
+    jsonWrite(configMultilamp, "host3", HTTP.arg("host3"));
+    jsonWrite(configMultilamp, "comment1", HTTP.arg("comment1"));
+    jsonWrite(configMultilamp, "comment2", HTTP.arg("comment2"));
+    jsonWrite(configMultilamp, "comment3", HTTP.arg("comment3"));   
+    writeFile("multilamp_config.json", configMultilamp );
+    ml1 = jsonReadtoInt(configMultilamp, "ml1");
+    ml2 = jsonReadtoInt(configMultilamp, "ml2");
+    ml3 = jsonReadtoInt(configMultilamp, "ml3");
+    str = jsonRead (configMultilamp, "host1");
+    str.toCharArray (Host1, str.length() + 1);
+    str = jsonRead (configMultilamp, "host2");
+    str.toCharArray (Host2, str.length() + 1);
+    str = jsonRead (configMultilamp, "host3");
+    str.toCharArray (Host3, str.length() + 1);    
+	HTTP.send(200, "text/plain", "OK");
+}
+
+void multilamp_get ()   {
+    String str;
+    String configMultilamp = readFile("multilamp_config.json", 512);
+    ml1 = jsonReadtoInt(configMultilamp, "ml1");
+    ml2 = jsonReadtoInt(configMultilamp, "ml2");
+    ml3 = jsonReadtoInt(configMultilamp, "ml3");
+    str = jsonRead (configMultilamp, "host1");
+    str.toCharArray (Host1, str.length() + 1);
+    str = jsonRead (configMultilamp, "host2");
+    str.toCharArray (Host2, str.length() + 1);
+    str = jsonRead (configMultilamp, "host3");
+    str.toCharArray (Host3, str.length() + 1);
+}
+
+void multiple_lamp_control ()   {
+    
+    char outputBuffer[24];
+    
+  if (connect)   {
+    
+    if ( ml1 )   {
+      sprintf_P(outputBuffer, PSTR("MULTI,%u,%u,%u,%u,%u"),
+        ONflag,
+        currentMode,
+        modes[currentMode].Brightness,
+        modes[currentMode].Speed,
+        modes[currentMode].Scale);
+      Udp.beginPacket(Host1,localPort);
+      Udp.write(outputBuffer);
+      Udp.endPacket();
+	  #ifdef GENERAL_DEBUG
+      LOG.print ("Передача MULTI на IP ");
+      LOG.print (Host1);
+      LOG.print ("  ");
+      LOG.println (outputBuffer);
+	  #endif
+    }
+	
+    if ( ml2 )   {
+      sprintf_P(outputBuffer, PSTR("MULTI,%u,%u,%u,%u,%u"),
+        ONflag,
+        currentMode,
+        modes[currentMode].Brightness,
+        modes[currentMode].Speed,
+        modes[currentMode].Scale);
+      Udp.beginPacket(Host2,localPort);
+      Udp.write(outputBuffer);
+      Udp.endPacket();
+    #ifdef GENERAL_DEBUG
+      LOG.print ("Передача MULTI на IP ");
+      LOG.print (Host2);
+      LOG.print ("  ");
+      LOG.println (outputBuffer);
+    #endif
+    }
+	
+    if ( ml3 )   {
+      sprintf_P(outputBuffer, PSTR("MULTI,%u,%u,%u,%u,%u"),
+        ONflag,
+        currentMode,
+        modes[currentMode].Brightness,
+        modes[currentMode].Speed,
+        modes[currentMode].Scale);
+      Udp.beginPacket(Host3,localPort);
+      Udp.write(outputBuffer);
+      Udp.endPacket();
+    #ifdef GENERAL_DEBUG
+      LOG.print ("Передача MULTI на IP ");
+      LOG.print (Host3);
+      LOG.print ("  ");
+      LOG.println (outputBuffer);
+    #endif
+    }
+  } 
+}
+#endif //USE_MULTIPLE_LAMPS_CONTROL
+
+void handle_eff_save ()   {
+    SPIFFS.begin();
+    File file = SPIFFS.open("/effect.ini","w");
+    if (file)   {
+        for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
+           file.write (modes[i].Brightness);
+           file.write (modes[i].Speed);
+           file.write (modes[i].Scale);
+        }
+        #ifdef GENERAL_DEBUG
+        LOG.println ("Настройки эффектов сохранены в файл");
+        #endif //GENERAL_DEBUG
+        showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
+    }
+    else   {
+        #ifdef GENERAL_DEBUG
+        LOG.println ("Не удалось сохранить настройки эффектов в файл");
+        #endif //GENERAL_DEBUG
+    }
+    file.close();
+    HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_eff_read ()   {
+    SPIFFS.begin();
+    File file = SPIFFS.open("/effect.ini","r");
+    if (file)   {
+        for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
+           modes[i].Brightness = file.read ();
+           modes[i].Speed = file.read ();
+           modes[i].Scale = file.read ();
+        }
+        #ifdef GENERAL_DEBUG
+        LOG.println ("Настройки эффектов прочитаны из файла и применены");
+        #endif //GENERAL_DEBUG
+        showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
+        loadingFlag = true;  // Перезапуск Эффекта
+	    jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	    jsonWrite(configSetup, "sc", modes[currentMode].Scale);       
+    }
+    else   {
+        #ifdef GENERAL_DEBUG
+        LOG.println ("Не удалось прочитать настройки эффектов из файла");
+        #endif //GENERAL_DEBUG
+    }
+    file.close();    
+    HTTP.send(200, "text/plain", "OK");
 }
   
 bool FileCopy (String SourceFile , String TargetFile)   {

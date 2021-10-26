@@ -46,6 +46,9 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
@@ -87,6 +90,9 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
@@ -128,6 +134,9 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
@@ -261,6 +270,9 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }
@@ -274,6 +286,9 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }
@@ -287,6 +302,9 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение масштаба: %d\n"), modes[currentMode].Scale);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }

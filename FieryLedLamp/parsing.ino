@@ -98,13 +98,16 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       currentMode = (uint8_t)atoi(buff);
       updateSets();
-      sendCurrent(inputBuffer);
 	  jsonWrite(configSetup, "eff_sel", currentMode);
 	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
 	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
 	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
       //FastLED.clear();
       //delay(1);
+      sendCurrent(inputBuffer);
 
       #ifdef USE_BLYNK_PLUS
       updateRemoteBlynkParams();
@@ -121,6 +124,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
 	  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
       FastLED.setBrightness(modes[currentMode].Brightness);
       //loadingFlag = true; //не хорошо делать перезапуск эффекта после изменения яркости, но в некоторых эффектах от чётности яркости мог бы зависеть внешний вид
       settChanged = true;
@@ -144,11 +150,14 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Speed = atoi(buff);
 	  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-      updateSets();
-      sendCurrent(inputBuffer);
       #ifdef USE_BLYNK_PLUS
       updateRemoteBlynkParams();
       #endif
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
+      updateSets();
+      sendCurrent(inputBuffer);
     }
 
     else if (!strncmp_P(inputBuffer, PSTR("SCA"), 3))
@@ -156,6 +165,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Scale = atoi(buff);
 	  jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
       updateSets();
       sendCurrent(inputBuffer);
       #ifdef USE_BLYNK_PLUS
@@ -175,6 +187,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 		jsonWrite(configSetup, "Power", ONflag);
         updateSets();
         changePower();
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
         sendCurrent(inputBuffer);
         #ifdef USE_BLYNK_PLUS
         updateRemoteBlynkParams();
@@ -195,6 +210,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         settChanged = true;
         eepromTimeout = millis() + EEPROM_WRITE_DELAY;
         changePower();
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
         sendCurrent(inputBuffer);
 
         #if (USE_MQTT)
@@ -401,6 +419,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 	  jsonWrite(configSetup, "br", ALLbri);
       FastLED.setBrightness(ALLbri);
       loadingFlag = true;
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      multiple_lamp_control ();
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
     }
     #ifdef USE_RANDOM_SETS_IN_APP
     else if (!strncmp_P(inputBuffer, PSTR("RND_"), 4)) // управление включением случайных настроек
@@ -409,18 +430,27 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
        {
          setModeSettings();
          updateSets();
+         #ifdef USE_MULTIPLE_LAMPS_CONTROL
+         multiple_lamp_control ();
+         #endif  //USE_MULTIPLE_LAMPS_CONTROL
          sendCurrent(inputBuffer);
        }
        else if (!strncmp_P(inputBuffer, PSTR("RND_1"), 5)) // выбрать случайные настройки текущему эффекту
        { // раньше была идея, что будут числа RND_1, RND_2, RND_3 - выбор из предустановленных настроек, но потом всё свелось к единственному варианту случайных настроек
          selectedSettings = 1U;
          updateSets();
+         #ifdef USE_MULTIPLE_LAMPS_CONTROL
+         multiple_lamp_control ();
+         #endif  //USE_MULTIPLE_LAMPS_CONTROL
        }
        else if (!strncmp_P(inputBuffer, PSTR("RND_Z"), 5)) // вернуть настройки по умолчанию всем эффектам
        {
          restoreSettings();
          selectedSettings = 0U;
          updateSets();
+         #ifdef USE_MULTIPLE_LAMPS_CONTROL
+         multiple_lamp_control ();
+         #endif  //USE_MULTIPLE_LAMPS_CONTROL
          sendCurrent(inputBuffer);
          #ifdef USE_BLYNK
          updateRemoteBlynkParams();
@@ -709,6 +739,48 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       saveConfig();                                       // Функция сохранения данных во Flash
       showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
     }
+#ifdef USE_MULTIPLE_LAMPS_CONTROL
+    else if (!strncmp_P(inputBuffer, PSTR("MULTI"), 5)) { // Управление несколькими лампами
+      uint8_t valid = 0, i = 0;
+      while (inputBuffer[i])   {   //пакет должен иметь вид MULTI,%U,%U,%U,%U,%U соответственно ON/OFF,№эффекта,яркость,скорость,масштаб
+        if (inputBuffer[i] == ',')  { valid++; } //Проверка на правильность пакета (по количеству запятых)
+        i++;       
+      }
+      if (valid == 5)   {   //Если пакет правильный выделяем лексемы,разделённые запятыми, и присваиваем параметрам эффектов
+        char *tmp = strtok (inputBuffer, ","); //Первая лексема MULTI пропускается
+        tmp = strtok (NULL, ",");
+	    ONflag = atoi( tmp);
+        tmp = strtok (NULL, ",");
+      if (atoi (tmp) < MODE_AMOUNT)   {
+        currentMode = atoi (tmp);     
+        tmp = strtok (NULL, ",");
+	    modes[currentMode].Brightness = atoi (tmp);
+        tmp = strtok (NULL, ",");
+	    modes[currentMode].Speed = atoi (tmp);
+        tmp = strtok (NULL, ",");
+	    modes[currentMode].Scale = atoi (tmp);
+      }
+      else currentMode = MODE_AMOUNT - 3;  //Если полученный номер эффекта больше , чем количество эффектов в лампе,включаем последний "адекватный" эффект
+ #ifdef GENERAL_DEBUG
+     LOG.print ("Принято MULTI ");
+     LOG.println (ONflag);
+     LOG.println (currentMode);
+     LOG.println (modes[currentMode].Brightness);
+     LOG.println (modes[currentMode].Speed);
+     LOG.println (modes[currentMode].Scale);
+ #endif  //GENERAL_DEBUG
+     changePower();   // Активацмя состояния ON/OFF
+     loadingFlag = true; // Перезапуск эффекта
+     FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
+     jsonWrite(configSetup, "br", modes[currentMode].Brightness); //Передаём в веб интерфейс новые параметры 
+     jsonWrite(configSetup, "sp", modes[currentMode].Speed);      //для правильного отображения
+     jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+     jsonWrite(configSetup, "eff_sel", currentMode);
+     jsonWrite(configSetup, "Power", ONflag);    
+     }
+     inputBuffer[0] = '\0';
+  	}
+#endif //USE_MULTIPLE_LAMPS_CONTROL
 //#ifdef USE_OLD_APP_FROM_KOTEYKA // (в версии 2.3... были кнопки, чтобы сохранить настройки эффектов из приложения в лампу)
 //и в новых тоже появились
     else if (!strncmp_P(inputBuffer, PSTR("SETS"), 4)) // передача настроек эффектов по запросу от приложения (если поддерживается приложением)
