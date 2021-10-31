@@ -242,7 +242,6 @@ void drawCrest() {
 //               EFF_UKRAINE
 //--------------------------------------
 void Ukraine() {
-    
   uint8_t divider;
   uint32_t color;
   static const uint32_t colors[2][5] PROGMEM = {
@@ -267,7 +266,7 @@ void Ukraine() {
     deltaHue2 = 0U;                           // count для замедления смены цвета
     deltaHue = 0U;                            // direction | 0 hue-- | 1 hue++ |
     hue2 = 0U;                                // Brightness
-    pcnt = 100;                               // timout 100
+    pcnt = 100;                               // timout
     eff_timout = 1500;                         // timout перезапуска эффекта
   }
 
@@ -741,4 +740,142 @@ void Watercolor() {
   }
   //  }
   step++;
+}
+
+// =========== FeatherCandle ============
+//         адаптация © SottNick
+//    github.com/mnemocron/FeatherCandle
+//      modify & design © SlingMaster
+//           EFF_FEATHER_CANDLE
+//                Свеча
+//---------------------------------------
+#include "data7x15flip.h"                       // FeatherCandle animation data
+const uint8_t  level = 160;
+const uint8_t  low_level = 110;
+const uint8_t *ptr  = anim;                     // Current pointer into animation data
+const uint8_t  w    = 7;                        // image width
+const uint8_t  h    = 15;                       // image height
+uint8_t        img[w * h];                      // Buffer for rendering image
+uint8_t        deltaX = floor(WIDTH * 0.5) - 4; // position img
+uint8_t last_brightness;
+void FeatherCandleRoutine() {
+#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
+  if (selectedSettings) {
+    // brightness | scale | speed
+    // { 21, 220,  40}
+    setModeSettings(1U + random8(100U), 190U + random8(65U));
+  }
+#endif
+  if (loadingFlag) {
+    FastLED.clear();
+    hue = 0;
+    gradientDownTop(0, CHSV(255U, 0U, 128U), 2, CHSV(50U, 255, 128U));
+    trackingObjectState[0] = low_level;
+    trackingObjectState[1] = low_level;
+    trackingObjectState[2] = low_level;
+    trackingObjectState[4] = floor(WIDTH * 0.5);
+    loadingFlag = false;
+  }
+
+  uint8_t a = pgm_read_byte(ptr++);     // New frame X1/Y1
+  if (a >= 0x90) {                      // EOD marker? (valid X1 never exceeds 8)
+    ptr = anim;                         // Reset animation data pointer to start
+    a   = pgm_read_byte(ptr++);         // and take first value
+  }
+  uint8_t x1 = a >> 4;                  // X1 = high 4 bits
+  uint8_t y1 = a & 0x0F;                // Y1 = low 4 bits
+  a  = pgm_read_byte(ptr++);            // New frame X2/Y2
+  uint8_t x2 = a >> 4;                  // X2 = high 4 bits
+  uint8_t y2 = a & 0x0F;                // Y2 = low 4 bits
+
+  // Read rectangle of data from anim[] into portion of img[] buffer
+  for (uint8_t y = y1; y <= y2; y++)
+    for (uint8_t x = x1; x <= x2; x++) {
+      img[y * w + x] = pgm_read_byte(ptr++);
+    }
+  int i = 0;
+  uint8_t color = (modes[currentMode].Scale - 1U) * 2.57;
+
+
+
+  // draw flame -------------------
+  for (uint8_t y = 1; y < h; y++) {
+    if (HEIGHT < 16) {
+      // for small matrix -----
+      if (y % 2 == 0) {
+        leds[XY(floor(WIDTH * 0.5) - 2, 7)] = CHSV(color, 255U, 55 + random8(200));
+        leds[XY(floor(WIDTH * 0.5) - 1, 5)] = CHSV(color, 255U, 205 + random8(50));
+        leds[XY(floor(WIDTH * 0.5) - 1, 6)] = CHSV(color, 255U, 155 + random8(100));
+        leds[XY(floor(WIDTH * 0.5) - 2, 4)] = CHSV(color - 10U , 255U, 120 + random8(130));
+        leds[XY(floor(WIDTH * 0.5), 4)] = CHSV(color - 10U , 255U, 100 + random8(120));
+      }
+    } else {
+      for (uint8_t x = 0; x < w; x++) {
+        uint8_t brightness = img[i];
+        leds[XY(deltaX + x, y)] = CHSV(brightness > 240 ? color : color - 10U , 255U, brightness);
+        i++;
+      }
+    }
+    // draw body FeatherCandle ------
+    if (y <= 4) {
+      if (y % 2 == 0) {
+        gradientDownTop(0, CHSV(50U, 16U, 32U), 3U, CHSV(color, 96U, 128U));
+      }
+    }
+
+    // drops of wax move -------------
+    switch (hue ) {
+      case 0:
+        if (trackingObjectState[0] < level) {
+          trackingObjectState[0]++;
+        }
+        break;
+      case 1:
+        if (trackingObjectState[0] > low_level) {
+          trackingObjectState[0] --;
+        }
+        if (trackingObjectState[1] < level) {
+          trackingObjectState[1] ++;
+        }
+        break;
+      case 2:
+        if (trackingObjectState[1] > low_level) {
+          trackingObjectState[1] --;
+        }
+        if (trackingObjectState[2] < level) {
+          trackingObjectState[2] ++;
+        }
+        break;
+      case 3:
+        if (trackingObjectState[2] > low_level) {
+          trackingObjectState[2] --;
+        } else {
+          hue++;
+          // set random position drop of wax
+          trackingObjectState[4] = floor(WIDTH * 0.5) - 3 + random8(6);
+        }
+        break;
+    }
+
+    if (hue > 3) {
+      hue++;
+    } else {
+      // LOG.printf_P(PSTR("[0] = %03d | [1] = %03d | [2] = %03d \n\r"), trackingObjectState[0], trackingObjectState[1], trackingObjectState[2]);
+      if (hue < 2) {
+        leds[XY(trackingObjectState[4], 2)] = CHSV(50U, 20U, trackingObjectState[0]);
+      }
+      if ((hue == 1) || (hue == 2)) {
+        leds[XY(trackingObjectState[4], 1)] = CHSV(50U, 15U, trackingObjectState[1]); // - 10;
+      }
+      if (hue > 1) {
+        leds[XY(trackingObjectState[4], 0)] = CHSV(50U, 5U, trackingObjectState[2]); // - 20;
+      }
+    }
+  }
+
+  // next -----------------
+  if ((trackingObjectState[0] == level) || (trackingObjectState[1] == level) || (trackingObjectState[2] == level)) {
+    hue++;
+  }
+
 }

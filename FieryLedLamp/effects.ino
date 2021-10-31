@@ -8704,8 +8704,8 @@ void magmaRoutine() {
     ff_z++;
 }
 
-
-// ============= Эффект Свеча ===============
+/*
+// ============= Эффект Свеча ===============  Перенесен в файл new_effect.ino  =====================
 // https://github.com/mnemocron/FeatherCandle
 // адаптация (с) SottNick
 
@@ -8750,7 +8750,7 @@ void FeatherCandleRoutine(){
     }  
 }
 
-/*
+
 // =============== Wine ================  Перенесен в файл new_effect.ino  =====================
 // ===== плавная смена цвета вина ======
 // © SlingMaster | by Alex Dovby
