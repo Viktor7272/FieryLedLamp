@@ -21,7 +21,7 @@ void SSDP_init(void) {
   SSDP.setName(jsonRead(configSetup, "SSDP"));
   SSDP.setSerialNumber(chipID);
   SSDP.setURL("/");
-  SSDP.setModelName("Gunner47_V2.0_WEB");
+  SSDP.setModelName("gunner47_v2.2_web_v2.1_94in1");
   SSDP.setModelNumber(chipID + "/" + jsonRead(configSetup, "SSDP"));
   
   
