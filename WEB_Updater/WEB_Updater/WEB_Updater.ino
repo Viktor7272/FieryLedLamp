@@ -5,8 +5,8 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <LittleFS.h>
 
-    #define STA_SSID "Pestel"           // Имя Вашей WiFi сети
-    #define PASSWORD "BarikMobarik"     // Пароль Вашей WiFi сети
+    #define STA_SSID "LOGIN"           // Имя Вашей WiFi сети
+    #define PASSWORD "PASSWORD"     // Пароль Вашей WiFi сети
 
 const char* host = "ESP8266";
 const char* ssid = STA_SSID;
