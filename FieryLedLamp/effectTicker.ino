@@ -177,6 +177,7 @@ void changePower()
   if (FavoritesManager::UseSavedFavoritesRunning == 0U)     // если выбрана опция Сохранять состояние (вкл/выкл) "избранного", то ни выключение модуля, ни выключение матрицы не сбрасывают текущее состояние (вкл/выкл) "избранного"
   {
       FavoritesManager::TurnFavoritesOff();
+      jsonWrite(configSetup, "cycle_on", 0);
   }
 
   #if (USE_MQTT)

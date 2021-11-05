@@ -447,8 +447,14 @@ void handle_alarm ()  {
 
 void handle_cycle_on()  {  // Вкл/выкл режима Цикл
 	jsonWrite(configSetup, "cycle_on", HTTP.arg("cycle_on").toInt());
-	FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");	
-	HTTP.send(200, "text/plain", "OK");
+    if (ONflag)   {
+	    FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");
+    }
+    else   {
+        FavoritesManager::FavoritesRunning = 0;
+        jsonWrite(configSetup, "cycle_on", 0);
+    }
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  //HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_time_eff ()  {  // Время переключения цикла + Dispersion добавочное случайное время от 0 до disp
@@ -468,8 +474,12 @@ void handle_rnd_cycle ()  {  // Перемешать выбранные или �
 
 void handle_cycle_allwase ()  {  // Запускать режим цыкл после выкл/вкл лампы или нет
 	jsonWrite(configSetup, "cycle_allwase", HTTP.arg("cycle_allwase").toInt());
-	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");	
-	HTTP.send(200, "text/plain", "OK");
+	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");
+    if (!ONflag && !FavoritesManager::UseSavedFavoritesRunning)   {
+        FavoritesManager::FavoritesRunning = 0;
+        jsonWrite(configSetup, "cycle_on", 0);
+    }
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  //HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_eff_all ()   {  //Выбрать все эффекты
