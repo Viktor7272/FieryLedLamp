@@ -81,7 +81,7 @@
                                                             // общий размер используемой EEPROM памяти (сумма всех хранимых настроек + 1 байт) 
 #define EEPROM_TOTAL_BYTES_USED              (EEPROM_FAVORITES_START_ADDRESS+MODE_AMOUNT+7)       
 
-#define EEPROM_FIRST_RUN_MARK                (24U)          // число-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
+#define EEPROM_FIRST_RUN_MARK                (MODE_AMOUNT)          // число-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
 #define EEPROM_WRITE_DELAY                   (30000UL)      // отсрочка записи в EEPROM после последнего изменения хранимых настроек, позволяет уменьшить количество операций записи в EEPROM
 
 class EepromManager

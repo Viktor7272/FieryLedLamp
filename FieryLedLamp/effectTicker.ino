@@ -167,6 +167,7 @@ void changePower()
   TimerManager::TimerRunning = false;
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
+  jsonWrite(configSetup, "tmr", 0);
   //#ifdef AUTOMATIC_OFF_TIME      
     if (ONflag && AUTOMATIC_OFF_TIME) {
       TimerManager::TimerRunning = true;
