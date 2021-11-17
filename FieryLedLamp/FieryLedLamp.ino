@@ -305,7 +305,7 @@ void setup()  //================================================================
    #if (BUTTON_IS_SENSORY == 0)
     #if ESP_RESET_ON_START
     delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
-    if (digitalRead(!BTN_PIN))
+    if (!(digitalRead(BTN_PIN)))
     {
      // wifiManager.resetSettings();                          
       LOG.println(F("Настройки WiFiManager сброшены"));
@@ -317,7 +317,7 @@ void setup()  //================================================================
     ESP.wdtFeed();
     #elif defined(BUTTON_LOCK_ON_START)
     delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
-    if (digitalRead(!BTN_PIN))
+    if (!(digitalRead(BTN_PIN)))
       buttonEnabled = false;
     ESP.wdtFeed();
     #endif
@@ -359,6 +359,7 @@ void setup()  //================================================================
   jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
   jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
   jsonWrite(configSetup, "tmr", 0);
+  jsonWrite(configSetup, "button_on", buttonEnabled);
   cycle_get();  // чтение выбранных эффектов
 #ifdef USE_MULTIPLE_LAMPS_CONTROL  
   multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
