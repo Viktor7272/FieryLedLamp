@@ -29,8 +29,11 @@ class TimerManager
         delay(2);
         FastLED.show();
         *ONflag = !(*ONflag);
+        changePower();        
 		jsonWrite(configSetup, "Power", (uint8_t)*ONflag);
-        changePower();
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL        
         *settChanged = true;
         *eepromTimeout = millis();
 

@@ -749,18 +749,46 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       if (valid == 5)   {   //Если пакет правильный выделяем лексемы,разделённые запятыми, и присваиваем параметрам эффектов
         char *tmp = strtok (inputBuffer, ","); //Первая лексема MULTI пропускается
         tmp = strtok (NULL, ",");
+        if (ONflag != atoi(tmp))   {
 	    ONflag = atoi( tmp);
+        changePower();   // Активацмя состояния ON/OFF
+        }
         tmp = strtok (NULL, ",");
-      if (atoi (tmp) < MODE_AMOUNT)   {
-        currentMode = atoi (tmp);     
-        tmp = strtok (NULL, ",");
-	    modes[currentMode].Brightness = atoi (tmp);
-        tmp = strtok (NULL, ",");
-	    modes[currentMode].Speed = atoi (tmp);
-        tmp = strtok (NULL, ",");
-	    modes[currentMode].Scale = atoi (tmp);
-      }
-      else currentMode = MODE_AMOUNT - 3;  //Если полученный номер эффекта больше , чем количество эффектов в лампе,включаем последний "адекватный" эффект
+        if (currentMode != atoi(tmp))   {
+          if (atoi (tmp) < MODE_AMOUNT)   {
+          currentMode = atoi (tmp);     
+          tmp = strtok (NULL, ",");
+	      modes[currentMode].Brightness = atoi (tmp);
+          tmp = strtok (NULL, ",");
+	      modes[currentMode].Speed = atoi (tmp);
+          tmp = strtok (NULL, ",");
+	      modes[currentMode].Scale = atoi (tmp);
+          loadingFlag = true; // Перезапуск эффекта
+          FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
+          }
+          else   {
+            currentMode = MODE_AMOUNT - 3;  //Если полученный номер эффекта больше , чем количество эффектов в лампе,включаем последний "адекватный" эффект
+            loadingFlag = true; // Перезапуск эффекта
+            FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
+          }
+        }
+        else   {
+            tmp = strtok (NULL, ",");
+            if (modes[currentMode].Brightness != atoi(tmp))   {
+                modes[currentMode].Brightness = atoi (tmp);
+                FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
+            }
+            tmp = strtok (NULL, ",");
+            if (modes[currentMode].Speed != atoi(tmp))   {
+                modes[currentMode].Speed = atoi (tmp);
+                loadingFlag = true; // Перезапуск эффекта
+            }
+            tmp = strtok (NULL, ",");
+                if (modes[currentMode].Scale != atoi(tmp))   {
+                modes[currentMode].Scale = atoi (tmp);
+                loadingFlag = true; // Перезапуск эффекта
+            }
+        }
  #ifdef GENERAL_DEBUG
      LOG.print ("Принято MULTI ");
      LOG.println (ONflag);
@@ -769,9 +797,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
      LOG.println (modes[currentMode].Speed);
      LOG.println (modes[currentMode].Scale);
  #endif  //GENERAL_DEBUG
-     changePower();   // Активацмя состояния ON/OFF
-     loadingFlag = true; // Перезапуск эффекта
-     FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
+     //changePower();   // Активацмя состояния ON/OFF
+     //loadingFlag = true; // Перезапуск эффекта
+     //FastLED.setBrightness(modes[currentMode].Brightness); //Применение яркости
      jsonWrite(configSetup, "br", modes[currentMode].Brightness); //Передаём в веб интерфейс новые параметры 
      jsonWrite(configSetup, "sp", modes[currentMode].Speed);      //для правильного отображения
      jsonWrite(configSetup, "sc", modes[currentMode].Scale);

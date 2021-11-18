@@ -282,6 +282,7 @@ void setup()  //================================================================
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
   touch.setDebounce(BUTTON_SET_DEBOUNCE);
+   #if (BUTTON_IS_SENSORY == 1)
     #if ESP_RESET_ON_START
     delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
     if (digitalRead(BTN_PIN))
@@ -300,6 +301,27 @@ void setup()  //================================================================
       buttonEnabled = false;
     ESP.wdtFeed();
     #endif
+   #endif
+   #if (BUTTON_IS_SENSORY == 0)
+    #if ESP_RESET_ON_START
+    delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
+    if (!(digitalRead(BTN_PIN)))
+    {
+     // wifiManager.resetSettings();                          
+      LOG.println(F("Настройки WiFiManager сброшены"));
+      //buttonEnabled = true;                                   // при сбросе параметров WiFi сразу после старта с зажатой кнопкой, также разблокируется кнопка, если была заблокирована раньше
+	jsonWrite(configSetup, "ssid", "");                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
+	jsonWrite(configSetup, "password", "");
+	saveConfig();                                       // Функция сохранения данных во Flash
+    }
+    ESP.wdtFeed();
+    #elif defined(BUTTON_LOCK_ON_START)
+    delay(500);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
+    if (!(digitalRead(BTN_PIN)))
+      buttonEnabled = false;
+    ESP.wdtFeed();
+    #endif
+   #endif    
   #endif
 
 
@@ -336,6 +358,8 @@ void setup()  //================================================================
   jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
   jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
   jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
+  jsonWrite(configSetup, "tmr", 0);
+  jsonWrite(configSetup, "button_on", buttonEnabled);
   cycle_get();  // чтение выбранных эффектов
 #ifdef USE_MULTIPLE_LAMPS_CONTROL  
   multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 

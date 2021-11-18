@@ -200,12 +200,7 @@ void Swirl() {
     }
     lastHue = hue;
   }
-  //  if (step % 4 == 0) {
-  //    // blurScreen(beatsin8(5U, 20U, 5U));
-  //  } else {
-  //    blurScreen(10U);
-  //  }
-  //blurScreen(deltaHue2);
+  // blurScreen(beatsin8(5U, 20U, 5U));
   blurScreen(4U + random8(8));
   step++;
 }
@@ -222,13 +217,17 @@ void drawCrest() {
     {0xFFD700, 0x000000, 0xFFD700, 0x000000, 0xFFD700 },
     {0xFFD700, 0xFFD700, 0xFFD700, 0xFFD700, 0xFFD700 },
     {0xFFD700, 0x000000, 0xFFD700, 0x000000, 0xFFD700 },
-    {0x000000, 0xFFD700, 0xFFD700, 0xFFD700, 0xFFD700 },
+    {0xFFD700, 0xFFD700, 0xFFD700, 0xFFD700, 0xFFD700 },
     {0x000000, 0x000000, 0xFFD700, 0x000000, 0x000000 }
   };
 
   uint8_t posX = floor(WIDTH * 0.5) - 3;
   uint8_t posY = 9;
   uint32_t color;
+  if (HEIGHT > 16) {
+    posY = floor(HEIGHT * 0.5) - 1;
+  }
+  FastLED.clear();
   for (uint8_t y = 0U; y < 9; y++) {
     for (uint8_t x = 0U; x < 5; x++) {
       color = data[y][x];
@@ -239,65 +238,100 @@ void drawCrest() {
 
 // ============== Ukraine ==============
 //      © SlingMaster | by Alex Dovby
-//               EFF_UKRAINE
+//              EFF_UKRAINE
 //--------------------------------------
 void Ukraine() {
   uint8_t divider;
   uint32_t color;
-  static const uint32_t colors[2][5] PROGMEM = {
-    {CRGB::Blue, CRGB::MediumBlue, CRGB::DarkBlue, 0x002171, CRGB::LightBlue },
-    {CRGB::Yellow, CRGB::Gold, 0x9E9D24 , 0xFF6F00, CRGB::LightYellow }
+  static const uint16_t MAX_TIME = 500;
+  uint16_t tMAX = 100;
+  static const uint8_t timeout = 100;
+  static const uint32_t colors[2][5] = {
+    {CRGB::Blue, CRGB::MediumBlue, 0x0F004F, 0x02002F, 0x1F2FFF },
+    {CRGB::Yellow, CRGB::Gold, 0x4E4000, 0xFF6F00, 0xFFFF2F }
   };
 
+  // Initialization =========================
   if (loadingFlag) {
 #if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
     if (selectedSettings) {
-      // scale | speed
-      setModeSettings(50U + random8(190U), 250U);
+      //                     scale | speed
+      setModeSettings(random8(250U), 200U + random8(50U));
     }
 #endif
     loadingFlag = false;
-    FastLED.clear();
     drawCrest();
-    // minspeed 190 maxspeed 210 ============
+    // minspeed 200 maxspeed 250 ============
     // minscale   0 maxscale 100 ============
     deltaValue = 255U - modes[currentMode].Speed + 1U;
     step = deltaValue;                        // чтообы при старте эффекта сразу покрасить лампу
     deltaHue2 = 0U;                           // count для замедления смены цвета
     deltaHue = 0U;                            // direction | 0 hue-- | 1 hue++ |
     hue2 = 0U;                                // Brightness
-    pcnt = 100;                               // timout
-    eff_timout = 1500;                         // timout перезапуска эффекта
+    ff_x = 1U;                                // counter
+    tMAX = 100U;                              // timeout
+  }
+  divider = floor((modes[currentMode].Scale - 1) / 10); // маштаб задает режим рестарта
+  tMAX = timeout + 100 * divider;
+  
+  if ((ff_x > timeout - 10) && (ff_x < timeout)) { // таймаут блокировки отрисовки флага
+    if (ff_x < timeout - 5) {                  // размытие тризуба
+      blurScreen(beatsin8(5U, 60U, 5U));
+    } else {
+      blurScreen(210U - ff_x);
+    }
   }
 
-  if (pcnt == 0) {
-    if (eff_timout == 0) loadingFlag = true;
-    eff_timout --;
+  if (ff_x > tMAX) {
+    if (divider == 0U) {                       // отрисовка тризуба только раз
+      ff_x = 0U;
+      tMAX += 20;
+    } else {
+      if (ff_x > tMAX + 100U * divider) {      // рестар эффект
+        drawCrest();
+        ff_x = 1U;
+      }
+    }
+  }
+  if ((ff_x != 0U) || (divider > 0)) {
+    ff_x++;
+  }
+
+  // Flag Draw =============================
+  if ((ff_x > timeout) || (ff_x == 0U))  {     // отрисовка флага
     if (step >= deltaValue) {
       step = 0U;
-      hue2 = random8(WIDTH - 2);
-      hue = random8(4);                       // flag color
-      deltaHue2 = random8(5);
-      blurScreen(dim8_raw(beatsin8(3, 64, 100)));
+      hue2 = random8(WIDTH - 2);               // случайное смещение мазка по оси Y
+      hue = random8(5);                        // flag color
+      // blurScreen(dim8_raw(beatsin8(3, 64, 100)));
+      // blurScreen(beatsin8(5U, 60U, 5U));
+      // dimAll(200U);
     }
+    if (step % 8 == 0 && modes[currentMode].Speed > 230) {
+      blurScreen(beatsin8(5U, 5U, 72U));
+    }
+    hue2++;                                    // x
+    deltaHue2++;                               // y
 
-    hue2++;                                   // x
-    deltaHue2++;                              // y
-
-    divider = 5 - floor((modes[currentMode].Scale - 1) / 20); // маштаб задает скорость изменения цвета 5 уровней
-
-    if  (hue2 > WIDTH) {
-      hue2 = 0U;
+    if (hue2 >= WIDTH) {
+      if (deltaHue2 > HEIGHT - 2 ) {           // если матрица высокая дорисовываем остальные мазки
+        deltaHue2 = random8(5);                // изменяем положение по Y только отрисовав весь флаг
+      }
+      if (step % 2 == 0) {
+        hue2 = 0U;
+      } else {
+        hue2 = random8(WIDTH);                 // смещение первого мазка по оси X
+      }
     }
 
     if (deltaHue2 >= HEIGHT) {
       deltaHue2 = 0U;
       if (deltaValue > 200U) {
-        hue = random8(4);                     // если низкая скорость меняем цвет после каждого витка
+        hue = random8(5);                      // если низкая скорость меняем цвет после каждого витка
       }
     }
 
-    if (deltaHue2 >= floor(HEIGHT / 2)) {
+    if (deltaHue2 > floor(HEIGHT / 2) - 1) {    // меняем цвет для разных частей флага
       color = colors[0][hue];
     } else {
       color = colors[1][hue];
@@ -305,18 +339,8 @@ void Ukraine() {
 
     // LOG.printf_P(PSTR("color = %08d | hue2 = %d | speed = %03d | custom_eff = %d\n"), color, hue2, deltaValue, custom_eff);
     drawPixelXY(hue2, deltaHue2, color);
-    // ---------------------------------------------------
+    // ----------------------------------
     step++;
-  }
-  if (pcnt > 0U) {
-    pcnt--;
-    if (pcnt < 10U) {
-      if (pcnt < 5U) {
-        blurScreen(beatsin8(5U, 60U, 5U));
-      } else {
-        blurScreen(10U - pcnt);
-      }
-    }
   }
 }
 
@@ -800,7 +824,7 @@ void FeatherCandleRoutine() {
 
   // draw flame -------------------
   for (uint8_t y = 1; y < h; y++) {
-    if (HEIGHT < 16) {
+    if (HEIGHT < 15) {
       // for small matrix -----
       if (y % 2 == 0) {
         leds[XY(floor(WIDTH * 0.5) - 2, 7)] = CHSV(color, 255U, 55 + random8(200));

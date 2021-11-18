@@ -46,6 +46,7 @@ void User_setings ()  {
  #endif //USE_MULTIPLE_LAMPS_CONTROL
  HTTP.on("/eff_save", handle_eff_save);  // Сохранить настройки эффектов в файл
  HTTP.on("/eff_read", handle_eff_read);  // Загрузить настройки эффектов из файла
+ HTTP.on("/alt", handle_alt_panel);   // Альтернативная главная web страница управления эффектами 
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -115,7 +116,7 @@ void handle_ESP_mode() {
 void handle_eff_reset() {    
     restoreSettings();
     updateSets();
-    loadingFlag = true;  // Перезапуск Эффекта
+    //loadingFlag = true;  // Перезапуск Эффекта
 	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
 	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
 	jsonWrite(configSetup, "sc", modes[currentMode].Scale);    
@@ -351,32 +352,39 @@ void handle_scp ()   {
 void handle_tm ()   {
 	bool flg = false;
 	jsonWrite(configSetup, "tm", HTTP.arg("tm").toInt());
-	saveConfig();
 	if (jsonReadtoInt(configSetup, "tm")) flg = FileCopy ("/css/dark/build.css.gz" , "/css/build.css.gz");
 	else flg = FileCopy ("/css/light/build.css.gz" , "/css/build.css.gz");
-	if (flg) HTTP.send(200, "text/plain", "OK");
+	if (flg) {
+       HTTP.send(200, "text/plain", "OK");
+	   saveConfig();
+    }
 	else HTTP.send(404, "text/plain", "File not found");  
 }
 
 void handle_PassOn ()   {
 	bool flg = false;
 	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
-	saveConfig();
 	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json.gz" , "/setup.json.gz");
 	else flg = FileCopy ("/stp/stp_nl.json.gz" , "/setup.json.gz");
-	if (flg) HTTP.send(200, "text/plain", "OK");
+	if (flg) {
+       HTTP.send(200, "text/plain", "OK");
+	   saveConfig();
+    }
 	else HTTP.send(404, "text/plain", "File not found");  
 }
 
 void handle_Power ()  {
-	jsonWrite(configSetup, "Power", HTTP.arg("Power").toInt());
+    uint8_t tmp;
+    tmp = HTTP.arg("Power").toInt();
+    if (tmp == 2) jsonReadtoInt(configSetup, "Power") == 0? tmp = 1 : tmp = 0;
+	jsonWrite(configSetup, "Power", tmp);
 	//saveConfig(); 
-	ONflag = jsonReadtoInt(configSetup, "Power");
+	ONflag = tmp;
 	changePower();
     if (ONflag)   eepromTimeout = millis();
     else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
     settChanged = true;  
-	HTTP.send(200, "text/plain", "OK");
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); //HTTP.send(200, "text/plain", "OK");
     #ifdef USE_MULTIPLE_LAMPS_CONTROL
     multiple_lamp_control ();
     #endif  //USE_MULTIPLE_LAMPS_CONTROL
@@ -394,7 +402,7 @@ void handle_summer_time() {
  
 void handle_time_always() {
   jsonWrite(configSetup, "time_always", HTTP.arg("time_always").toInt());
-  saveConfig();  
+  saveConfig();
   time_always = jsonReadtoInt(configSetup, "time_always");
   HTTP.send(200, "text/plain", "OK");
  }
@@ -446,9 +454,18 @@ void handle_alarm ()  {
 
 
 void handle_cycle_on()  {  // Вкл/выкл режима Цикл
-	jsonWrite(configSetup, "cycle_on", HTTP.arg("cycle_on").toInt());
-	FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");	
-	HTTP.send(200, "text/plain", "OK");
+    uint8_t tmp;
+    tmp = HTTP.arg("cycle_on").toInt();
+    if (tmp == 2) jsonReadtoInt(configSetup, "cycle_on") == 0? tmp = 1 : tmp = 0;
+	jsonWrite(configSetup, "cycle_on", tmp);
+    if (ONflag)   {
+	    FavoritesManager::FavoritesRunning = tmp;
+    }
+    else   {
+        FavoritesManager::FavoritesRunning = 0;
+        jsonWrite(configSetup, "cycle_on", 0);
+    }
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  //HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_time_eff ()  {  // Время переключения цикла + Dispersion добавочное случайное время от 0 до disp
@@ -468,8 +485,12 @@ void handle_rnd_cycle ()  {  // Перемешать выбранные или �
 
 void handle_cycle_allwase ()  {  // Запускать режим цыкл после выкл/вкл лампы или нет
 	jsonWrite(configSetup, "cycle_allwase", HTTP.arg("cycle_allwase").toInt());
-	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");	
-	HTTP.send(200, "text/plain", "OK");
+	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");
+    if (!ONflag && !FavoritesManager::UseSavedFavoritesRunning)   {
+        FavoritesManager::FavoritesRunning = 0;
+        jsonWrite(configSetup, "cycle_on", 0);
+    }
+	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");  //HTTP.send(200, "text/plain", "OK");
 }
 
 void handle_eff_all ()   {  //Выбрать все эффекты
@@ -558,10 +579,16 @@ void cycle_get ()  { // Начальная инициализация выбра
 }
 
 void handle_timer ()   {  // Установка таймера выключения
-    jsonWrite(configSetup, "timer", HTTP.arg("timer").toInt());
-    TimerManager::TimeToFire = millis() + jsonReadtoInt(configSetup, "timer") * 60UL * 1000UL;
+    uint8_t tmp;
+    tmp = HTTP.arg("timer").toInt();
+    if (tmp != jsonReadtoInt(configSetup, "timer"))   {
+       jsonWrite(configSetup, "timer", tmp);
+       saveConfig();
+    }
+    jsonWrite(configSetup, "tmr", 1);
+    TimerManager::TimeToFire = millis() + tmp * 60UL * 1000UL;
     TimerManager::TimerRunning = true;    
-    HTTP.send(200, "application/json", "{\"title\":\"Запущен\",\"class\":\"btn btn-block btn-warning\"}");
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); //HTTP.send(200, "application/json", "{\"title\":\"Запущен\",\"class\":\"btn btn-block btn-warning\"}");
 }
 
 void handle_def ()   { // Сброс настроек текущего эффекта по умолчанию
@@ -750,6 +777,18 @@ void handle_eff_read ()   {
     }
     file.close();    
     HTTP.send(200, "text/plain", "OK");
+}
+
+void handle_alt_panel ()   {
+	bool flg = false;
+	jsonWrite(configSetup, "alt", HTTP.arg("alt").toInt());
+	if (jsonReadtoInt(configSetup, "alt")) flg = FileCopy ("/stp/index2.json.gz" , "/index.json.gz");
+	else flg = FileCopy ("/stp/index.json.gz" , "/index.json.gz");
+	if (flg) {
+       HTTP.send(200, "text/plain", "OK");
+	   saveConfig();
+    }    
+	else HTTP.send(404, "text/plain", "File not found");    
 }
   
 bool FileCopy (String SourceFile , String TargetFile)   {
