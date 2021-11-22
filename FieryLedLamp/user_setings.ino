@@ -47,6 +47,7 @@ void User_setings ()  {
  HTTP.on("/eff_save", handle_eff_save);  // Сохранить настройки эффектов в файл
  HTTP.on("/eff_read", handle_eff_read);  // Загрузить настройки эффектов из файла
  HTTP.on("/alt", handle_alt_panel);   // Альтернативная главная web страница управления эффектами 
+ HTTP.on("/get_time", get_time_manual);  // Синхронизация времени лампы с браузером на устройстве (телефоне)
 
   // --------------------Получаем SSID со страницы
   HTTP.on("/ssid", HTTP_GET, []() {
@@ -363,71 +364,73 @@ void handle_tm ()   {
 
 void handle_PassOn ()   {
 	bool flg = false;
-	jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
-	if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json.gz" , "/setup.json.gz");
-	else flg = FileCopy ("/stp/stp_nl.json.gz" , "/setup.json.gz");
-	if (flg) {
-       HTTP.send(200, "text/plain", "OK");
-	   saveConfig();
+	  jsonWrite(configSetup, "PassOn", HTTP.arg("PassOn").toInt());
+	  if (jsonReadtoInt(configSetup, "PassOn")) flg = FileCopy ("/stp/stp_l.json.gz" , "/setup.json.gz");
+	  else flg = FileCopy ("/stp/stp_nl.json.gz" , "/setup.json.gz");
+	  if (flg) {
+      HTTP.send(200, "text/plain", "OK");
+	    saveConfig();
     }
-	else HTTP.send(404, "text/plain", "File not found");  
+	  else HTTP.send(404, "text/plain", "File not found");  
 }
 
 void handle_Power ()  {
     uint8_t tmp;
     tmp = HTTP.arg("Power").toInt();
     if (tmp == 2) jsonReadtoInt(configSetup, "Power") == 0? tmp = 1 : tmp = 0;
-	jsonWrite(configSetup, "Power", tmp);
-	//saveConfig(); 
-	ONflag = tmp;
-	changePower();
+	  jsonWrite(configSetup, "Power", tmp);
+  	ONflag = tmp;
+	  changePower();
     if (ONflag)   eepromTimeout = millis();
     else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
     settChanged = true;  
-	HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}"); //HTTP.send(200, "text/plain", "OK");
+	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
     #ifdef USE_MULTIPLE_LAMPS_CONTROL
     multiple_lamp_control ();
     #endif  //USE_MULTIPLE_LAMPS_CONTROL
 }	
 
 void handle_summer_time() {
-  #ifdef USE_NTP
-	jsonWrite(configSetup, "Summer_Time", HTTP.arg("Summer_Time").toInt()); 
-	saveConfig();
-	summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") * 60;
-	localTimeZone.setRules (summerTime, winterTime);
-  #endif
-	HTTP.send(200, "text/plain", "OK");
+    #ifdef USE_NTP
+	  jsonWrite(configSetup, "Summer_Time", HTTP.arg("Summer_Time").toInt()); 
+	  saveConfig();
+	  summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") * 60;
+	  localTimeZone.setRules (summerTime, winterTime);
+    #endif
+    jsonWrite(configSetup, "time", (Get_Time(getCurrentLocalTime())));
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
  }
  
 void handle_time_always() {
-  jsonWrite(configSetup, "time_always", HTTP.arg("time_always").toInt());
-  saveConfig();
-  time_always = jsonReadtoInt(configSetup, "time_always");
-  HTTP.send(200, "text/plain", "OK");
+    jsonWrite(configSetup, "time_always", HTTP.arg("time_always").toInt());
+    saveConfig();
+    time_always = jsonReadtoInt(configSetup, "time_always");
+    HTTP.send(200, "text/plain", "OK");
  }
  
 // Установка параметров времянной зоны по запросу вида, например, http://192.168.0.101/timeZone?timeZone=3
 void handle_time_zone() {
-  #ifdef USE_NTP
-  jsonWrite(configSetup, "timezone", HTTP.arg("timeZone").toInt()); // Получаем значение timezone из запроса конвертируем в int сохраняем
-  saveConfig();
-  winterTime.offset = jsonReadtoInt(configSetup, "timezone") * 60;
-  summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") * 60;
-  localTimeZone.setRules (summerTime, winterTime);
-  #endif
-  HTTP.send(200, "text/plain", "OK");
+    #ifdef USE_NTP
+    jsonWrite(configSetup, "timezone", HTTP.arg("timeZone").toInt()); // Получаем значение timezone из запроса конвертируем в int сохраняем
+    saveConfig();
+    winterTime.offset = jsonReadtoInt(configSetup, "timezone") * 60;
+    summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") * 60;
+    localTimeZone.setRules (summerTime, winterTime);
+    #endif
+    //HTTP.send(200, "text/plain", "OK");
+    jsonWrite(configSetup, "time", (Get_Time(getCurrentLocalTime())));
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 void handle_alarm ()  { 
-      char i[2];
-    	String configAlarm = readFile("alarm_config.json", 512); 
-	#ifdef GENERAL_DEBUG
-		LOG.println ("\nУстановки будильника");
+    char i[2];
+    String configAlarm = readFile("alarm_config.json", 512); 
+	  #ifdef GENERAL_DEBUG
+		  LOG.println ("\nУстановки будильника");
     	LOG.println(configAlarm);
-	#endif
+	  #endif
   	  // подготовка  строк с именами полей json file
-  	  for (uint8_t k=0; k<7; k++) {
+  	for (uint8_t k=0; k<7; k++) {
    	      itoa ((k+1), i, 10);
     	   //i[1] = 0;
       	  String a = "a" + String (i) ;
@@ -442,13 +445,13 @@ void handle_alarm ()  {
      	  alarms[k].Time = (jsonReadtoInt(configAlarm, h)) * 60 + (jsonReadtoInt(configAlarm, m));
      	  EepromManager::SaveAlarmsSettings(&k, alarms);
      }
-	jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());
-	jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
-	dawnMode = jsonReadtoInt(configAlarm, "t")-1;
-	DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
-	EepromManager::SaveDawnMode(&dawnMode);
-  writeFile("alarm_config.json", configAlarm );
-  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+	  jsonWrite(configAlarm, "t", HTTP.arg("t").toInt());
+	  jsonWrite(configAlarm, "after", HTTP.arg("after").toInt());
+	  dawnMode = jsonReadtoInt(configAlarm, "t")-1;
+	  DAWN_TIMEOUT = jsonReadtoInt(configAlarm, "after");
+	  EepromManager::SaveDawnMode(&dawnMode);
+    writeFile("alarm_config.json", configAlarm );
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
 
 
@@ -789,6 +792,23 @@ void handle_alt_panel ()   {
 	   saveConfig();
     }    
 	else HTTP.send(404, "text/plain", "File not found");    
+}
+
+void get_time_manual ()   {
+     time_t tmp;
+     tmp = HTTP.arg("get_time").toInt();
+    jsonWrite(configSetup, "get_time", tmp);
+    phoneTimeLastSync = tmp + jsonReadtoInt(configSetup, "timezone") * 3600;
+    manualTimeShift = phoneTimeLastSync - millis() / 1000UL;
+    #ifdef WARNING_IF_NO_TIME
+      noTimeClear();
+    #endif // WARNING_IF_NO_TIME  
+    timeSynched = true;
+    #if defined(PHONE_N_MANUAL_TIME_PRIORITY) && defined(USE_NTP)
+      stillUseNTP = false;
+    #endif
+    jsonWrite(configSetup, "time", (Get_Time(manualTimeShift+millis()/1000UL)));
+    HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
 }
   
 bool FileCopy (String SourceFile , String TargetFile)   {

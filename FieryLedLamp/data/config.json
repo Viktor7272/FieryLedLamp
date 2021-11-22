@@ -35,5 +35,6 @@
 "random_on":0,
 "cycle_allwase":0,
 "timer":15,
-"alt":0
+"alt":0,
+"get_time":0
 }
