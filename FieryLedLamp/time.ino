@@ -29,6 +29,10 @@ static CHSV dawnColor = CHSV(0, 0, 0);*/
 static CRGB dawnColor[6];
 
 static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
+#ifdef TM1637_USE
+uint8_t hours;
+uint8_t minu;
+#endif
 
 void timeTick()
 {
@@ -83,6 +87,9 @@ if (stillUseNTP)
       
       if (!timeSynched)                                                   // если время не было синхронизиировано ни разу, отключаем будильник до тех пор, пока оно не будет синхронизировано
       {
+#ifdef TM1637_USE
+        display.displayByte(_dash, _dash, _dash, _dash);                  // отображаем прочерки
+#endif
         return;
       }
 
@@ -97,6 +104,10 @@ if (stillUseNTP)
 
       printTime(thisTime, false, ONflag);                                 // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
 
+#ifdef TM1637_USE
+      hours = hour(currentLocalTime);                   // получаем значение часов
+      minu = minute(currentLocalTime);                  // получаем значение минут
+#endif
       // проверка рассвета
       if (alarms[thisDay].State &&                                                                                          // день будильника
           thisTime >= (uint16_t)constrain(alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]), 0, (24 * 60)) &&    // позже начала
@@ -143,7 +154,13 @@ if (stillUseNTP)
           delay(1);
           FastLED.show();
           dawnFlag = true;
+#ifdef TM1637_USE
+          blink_clock = true;
+#endif
         }
+#ifdef TM1637_USE
+        else blink_clock = false;
+#endif
 
         #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
         if (thisTime == alarms[thisDay].Time)                             // установка, только в минуту, на которую заведён будильник
@@ -167,6 +184,9 @@ if (stillUseNTP)
           FastLED.show();
           changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
+#ifdef TM1637_USE
+        blink_clock = false;
+#endif
         manualOff = false;
         /* оптимизируем структуру данных и их обработчик
         dawnColorMinus1 = CHSV(0, 0, 0);
@@ -231,8 +251,6 @@ void getFormattedTime(char *buf)
   sprintf_P(buf, PSTR("%02u:%02u:%02u"), hour(currentLocalTime), minute(currentLocalTime), second(currentLocalTime));
 }
 
-#endif
-
 time_t getCurrentLocalTime()
 {
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
@@ -293,3 +311,31 @@ String Get_Time(time_t LocalTime) {
  Time = Time.substring(i - 2, i + 6); // Выделяем из строки 2 символа перед символом : и 6 символов после
  return Time; // Возврашаем полученное время
 }
+#ifdef TM1637_USE
+void clockTicker_blink(bool blink)
+{
+  bool aDirection = false;
+  if (blink)
+  {
+    if (millis() - tmr_blink > 65) {
+      tmr_blink = millis();
+      display.setBrightness(DispBrightness);
+      display.displayClock(hours, minu);                         // выводим время функцией часов
+      if (aDirection) DispBrightness++; else DispBrightness--;
+      if (DispBrightness > 7) {
+        DispBrightness = 7;
+      }
+      if (DispBrightness == 0) {        aDirection = false;
+
+        aDirection = true;
+      }
+    }
+  } else
+      {
+      display.setBrightness(DispBrightness);
+      display.displayClock(hours, minu);
+      }
+}
+#endif
+
+#endif

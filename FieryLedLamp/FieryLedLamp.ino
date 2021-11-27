@@ -69,6 +69,17 @@
 #include <LittleFS.h>    
 #define SPIFFS LittleFS  
 #endif
+#ifdef TM1637_USE
+#include "TM1637Display.h"
+#endif
+#ifdef TM1637_USE
+uint8_t DispBrightness = 5;          // +++ Яркость дисплея от 0 до 7
+bool dotFlag = false;                // +++ флаг: в часах рисуется двоеточие или нет
+uint32_t tmr_clock = 0;              // +++ таймер мигания разделителя часов на дисплее
+uint32_t tmr_blink = 0;              // +++ таймер плавного изменения яркости дисплея
+bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
+TM1637Display display(CLK, DIO);     // +++ подключаем дисплей
+#endif
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
 CRGB leds[NUM_LEDS];
 //WiFiManager wifiManager;
@@ -202,6 +213,13 @@ void setup()  //================================================================
   Serial.println();
   ESP.wdtEnable(WDTO_8S);
 
+  // часы
+#ifdef TM1637_USE
+  tmr_clock = millis();                                     // +++ устанавливаем начальное значение счетчика
+  display.setBrightness(DispBrightness);                    // +++ яркость дисплея максимальная = 7
+  display.displayByte(_empty, _empty, _empty, _empty);      // +++ очистка дисплея
+  display.displayByte(_dash, _dash, _dash, _dash);          // +++ отображаем прочерки
+#endif
 
   // ПИНЫ
   #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
@@ -504,12 +522,23 @@ void loop()  //=================================================================
 		connect = true;
 		//ESP_CONN_TIMEOUT = 0;
 		lastResolveTryMoment = 0;
-   #ifdef GENERAL_DEBUG
-    LOG.println ("***********************************************");
-    LOG.print ("Heap Size after connection Station mode = ");
-    LOG.println(system_get_free_heap_size());
-    LOG.println ("***********************************************");
-    #endif
+      #ifdef GENERAL_DEBUG
+        LOG.println ("***********************************************");
+        LOG.print ("Heap Size after connection Station mode = ");
+        LOG.println(system_get_free_heap_size());
+        LOG.println ("***********************************************");
+      #endif
+      #ifdef DISPLAY_IP_AT_START
+        loadingFlag = true;
+      #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время вывода текста
+        digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+      #endif
+        while(!fillString(WiFi.localIP().toString().c_str(), CRGB::White, false)) { delay(1); ESP.wdtFeed(); }
+      #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
+        digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
+      #endif
+        loadingFlag = true;
+      #endif  // DISPLAY_IP_AT_START
 		delay (100);	  
 	}
  }
@@ -530,6 +559,14 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
   //HTTP.handleClient(); // Обработка запросов web страницы. 
   parseUDP();
   yield();
+#ifdef TM1637_USE
+    if (millis() - tmr_clock > 1000) {       // каждую секунду изменяем
+      tmr_clock = millis();                  // обновляем значение счетчика
+      dotFlag = !dotFlag;                    // инверсия флага
+      display.point(dotFlag);                // выкл/выкл двоеточия
+    }
+    clockTicker_blink(blink_clock);
+#endif
  if (Painting == 0) {
 
   effectsTick();
