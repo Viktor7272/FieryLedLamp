@@ -56,8 +56,8 @@ uint32_t AUTOMATIC_OFF_TIME = (5 * 60UL * 60UL * 1000UL);   // Не удаляй
 #endif  
 //#define TM1637_USE                                          // раскоментировать, если используется дисплей TM1637
 #ifdef TM1637_USE
-#define DIO                   (12U)                         // D6 TM1637 display DIO pin
-#define CLK                   (2U)                          // D4 TM1637 display CLK pin
+#define DIO                   (16U)                         // D0 TM1637 display DIO pin
+#define CLK                   (14U)                          // D5 TM1637 display CLK pin
 #endif
 
 // --- ESP (WiFi клиент) ---------------
