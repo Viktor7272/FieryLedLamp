@@ -73,12 +73,13 @@
 #include "TM1637Display.h"
 #endif
 #ifdef TM1637_USE
-uint8_t DispBrightness = 5;          // +++ Яркость дисплея от 0 до 7
+uint8_t DispBrightness = 1;          // +++ Яркость дисплея от 0 до 255(5 уровней яркости с шагом 51). 0 - дисплей погашен 
 bool dotFlag = false;                // +++ флаг: в часах рисуется двоеточие или нет
 uint32_t tmr_clock = 0;              // +++ таймер мигания разделителя часов на дисплее
 uint32_t tmr_blink = 0;              // +++ таймер плавного изменения яркости дисплея
-bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
+//bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
 TM1637Display display(CLK, DIO);     // +++ подключаем дисплей
+bool aDirection = false;             // +++ Направление изменения яркрсти
 #endif
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
 CRGB leds[NUM_LEDS];
@@ -216,7 +217,7 @@ void setup()  //================================================================
   // часы
 #ifdef TM1637_USE
   tmr_clock = millis();                                     // +++ устанавливаем начальное значение счетчика
-  display.setBrightness(DispBrightness);                    // +++ яркость дисплея максимальная = 7
+  display.setBrightness(DispBrightness);                    // +++ яркость дисплея максимальная = 255
   display.displayByte(_empty, _empty, _empty, _empty);      // +++ очистка дисплея
   display.displayByte(_dash, _dash, _dash, _dash);          // +++ отображаем прочерки
 #endif
@@ -384,13 +385,17 @@ void setup()  //================================================================
 #endif //USE_MULTIPLE_LAMPS_CONTROL
   
   #ifdef GENERAL_DEBUG
-  LOG.print(F("\nDAWN_TIMEOUT=afer = "));
-  LOG.println ( DAWN_TIMEOUT );
+  LOG.print(F("\nДлинна 1й строки = "));
+  LOG.println ( efList_1.length() );
+  LOG.print(F("Длинна 2й строки = "));
+  LOG.println ( efList_2.length() );
+  LOG.print(F("Длинна 3й строки = "));
+  LOG.println ( efList_3.length() );
   #endif
 
   // WI-FI
   
-  LOG.printf_P(PSTR("Рабочий режим лампы: ESP_MODE = %d\n"), espMode);
+  LOG.printf_P(PSTR("\nРабочий режим лампы: ESP_MODE = %d\n"), espMode);
   //Запускаем WIFI
   LOG.println(F("Старуем WIFI"));
   
@@ -565,7 +570,9 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
       dotFlag = !dotFlag;                    // инверсия флага
       display.point(dotFlag);                // выкл/выкл двоеточия
     }
-    clockTicker_blink(blink_clock);
+    if (dawnFlag) {
+    clockTicker_blink();
+    }
 #endif
  if (Painting == 0) {
 

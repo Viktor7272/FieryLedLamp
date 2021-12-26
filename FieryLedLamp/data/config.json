@@ -15,7 +15,7 @@
 "night_time":22,
 "night_bright":5,
 "day_time":8,
-"day_bright":250,
+"day_bright":153,
 "effect_always":1, 
 "ntp":"pl.pool.ntp.org",
 "run_text":"Привет!",

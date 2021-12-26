@@ -146,7 +146,6 @@ void handle_night_time ()  {
 	NIGHT_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "night_bright");
 	NIGHT_HOURS_STOP = 60U * jsonReadtoInt(configSetup, "day_time");
 	DAY_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "day_bright");
-    clockTicker_blink();
 	HTTP.send(200, "text/plain", "OK");
  }
 
@@ -378,24 +377,15 @@ void handle_PassOn ()   {
 
 void handle_Power ()  {
     uint8_t tmp;
-    if (dawnFlag) {
-      manualOff = true;
-      dawnFlag = false;
-      clockTicker_blink();
-      FastLED.setBrightness(modes[currentMode].Brightness);
-      changePower();
-    }
-    else {    
     tmp = HTTP.arg("Power").toInt();
     if (tmp == 2) jsonReadtoInt(configSetup, "Power") == 0? tmp = 1 : tmp = 0;
 	  jsonWrite(configSetup, "Power", tmp);
   	ONflag = tmp;
-	changePower();
+	  changePower();
     if (ONflag)   eepromTimeout = millis();
     else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
-    settChanged = true;
-    }
-	 HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
+    settChanged = true;  
+	  HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
     #ifdef USE_MULTIPLE_LAMPS_CONTROL
     multiple_lamp_control ();
     #endif  //USE_MULTIPLE_LAMPS_CONTROL
@@ -772,9 +762,7 @@ void handle_eff_read ()   {
     SPIFFS.begin();
     File file = SPIFFS.open("/effect.ini","r");
     if (file)   {
-        uint16_t file_size = file.size();
-        if ((file_size/3) < MODE_AMOUNT) file_size -= 6;
-        for (uint8_t i = 0; i < (file_size/3); i++) {
+        for (uint8_t i = 0; i < MODE_AMOUNT; i++) {
            modes[i].Brightness = file.read ();
            modes[i].Speed = file.read ();
            modes[i].Scale = file.read ();

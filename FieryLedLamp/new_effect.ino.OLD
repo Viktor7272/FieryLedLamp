@@ -1,200 +1,11 @@
-//---------------------------------------
-// My global variables
-uint8_t custom_eff = 0;
-//---------------------------------------
-// --------------------------------------
-// espModeStat default lamp start effect
-// --------------------------------------
-void  espModeState(uint8_t color) {
-  const uint8_t centerH = floor( WIDTH * 0.5);
-  const uint8_t centerV = floor(HEIGHT * 0.5);
-  if (loadingFlag) {
-    loadingFlag = false;
-    step = deltaValue;
-    deltaValue = 1;
-    hue2 = 0;
-    deltaHue2 = 1;
-    DrawLine(centerH - 1, centerV, centerH, centerV, CHSV(color, 255, 210));
-    DrawLine(centerH - 1, centerV - 1, centerH, centerV - 1, CHSV(color, 255, 210));
-    // setModeSettings(128U, 128U);
-    pcnt = 1;
-    FastLED.clear();
-  }
-  if (pcnt > 0 & pcnt < 200) {
-    if (pcnt != 0) {
-      pcnt++;
-    }
-
-    // animtion esp state ===========
-    dimAll(108);
-    //    if (step % 2 == 0) {
-    uint8_t w = validMinMax(hue2, 0, floor(WIDTH / 2) - 1);
-    uint8_t posY = validMinMax(centerV + deltaHue2, 0, HEIGHT - 1);
-    DrawLine(centerH - 1 - w, posY, centerH + w, posY, CHSV(color, 255, (210 - deltaHue2)));
-    posY = validMinMax(centerV - 1 - deltaHue2, 1, HEIGHT - 1);
-    DrawLine(centerH - 1 - w, posY, centerH + w, posY, CHSV(color, 255, (210 - deltaHue2)));
-
-    if (deltaHue2 == 0) {
-      deltaHue2 = 1;
-    }
-    hue2++;
-    deltaHue2 = deltaHue2 << 1;
-    if (deltaHue2 == 2) {
-      deltaHue2 = deltaHue2 << 1;
-    }
-    if (centerV + deltaHue2 > HEIGHT) {
-      deltaHue2 = 0;
-      hue2 = 0;
-    }
-  } else {
-
-#ifdef USE_NTP
-    // error ntp ------------------
-    color = 255;        // если при включенном NTP время не получено, будем красным цветом мигать
-#else
-    color = 176U;       // иначе скромно синим - нормальная ситуация при отсутствии NTP
-#endif //USE_NTP
-    // animtion no time -----------
-    // leds[XY(centerH , 4U)] = CHSV( color, 255, (step % 4 == 0) ? 128 : 255);
-    leds[XY(centerH , 0U)] = CHSV( color, 255, (step % 4 == 0) ? 200 : 128);
-  }
-  // clear led lamp ---------------
-  if ( pcnt >= 100) {
-    pcnt = 0;
-    FastLED.clear();
-    FastLED.show();
-    loadingFlag = false;
-  }
-
-  //  LOG.printf_P(PSTR("espModeState | pcnt = %05d | deltaHue2 = %03d | step %03d | ONflag • %s\n"), pcnt, deltaHue2, step, (ONflag ? "TRUE" : "FALSE"));
-  step++;
-
-}
-
-//---------------------------------------
-// Global Function
-//---------------------------------------
-void drawRec(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint32_t color) {
-  for (uint8_t y = startY; y < endY; y++) {
-    for (uint8_t x = startX; x < endX; x++) {
-      drawPixelXY(x, y, color);
-    }
-  }
-}
-
-//---------------------------------------
-void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color) {
-  for (uint8_t y = startY; y < endY; y++) {
-    for (uint8_t x = startX; x < endX; x++) {
-      drawPixelXY(x, y, color);
-    }
-  }
-}
-
-//--------------------------------------
-uint8_t validMinMax(float val, uint8_t minV, uint32_t maxV) {
-  uint8_t result;
-  if (val <= minV) {
-    result = minV;
-  } else if (val >= maxV) {
-    result = maxV;
-  } else {
-    result = ceil(val);
-  }
-  //  LOG.printf_P(PSTR( "result: %f | val: %f \n\r"), result, val);
-  return result;
-}
-
-// альтернативный градиент для ламп собраных из лент с вертикальной компоновкой
-// gradientHorizontal | gradientVertical менее производительный но работает на всех видах ламп
-//--------------------------------------
-void gradientHorizontal(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate) {
-  float step_color = 0;
-  float step_br = 0;
-  if (startX == endX) {
-    endX++;
-  }
-  if (startY == endY) {
-    endY++;
-  }
-  step_color = (end_color - start_color) / abs(startX - endX);
-  if (start_color >  end_color) {
-    step_color -= 1.2;
-  } else {
-    step_color += 1.2;
-  }
-
-  step_br = (end_br - start_br) / abs(startX - endX);
-  if (start_br >  end_color) {
-    step_br -= 1.2;
-  } else {
-    step_br += 1.2;
-  }
-
-  // LOG.printf_P(PSTR( "\n step_color: %f | step_br: %f \n\n\r"), step_color, step_br);
-  for (uint8_t x = startX; x < endX; x++) {
-    for (uint8_t y = startY; y < endY; y++) {
-      CHSV thisColor = CHSV((uint8_t) validMinMax((start_color + (x - startX) * step_color), 1, 254), saturate,
-                            (uint8_t) validMinMax((start_br + (x - startX) * step_br), 0, 255) );
-      drawPixelXY(x, y, thisColor);
-    }
-  }
-}
-
-//--------------------------------------
-void gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate) {
-  float step_color = 0;
-  float step_br = 0;
-  if (startX == endX) {
-    endX++;
-  }
-  if (startY == endY) {
-    endY++;
-  }
-  step_color = (end_color - start_color) / abs(startY - endY);
-
-  if (start_color >  end_color) {
-    step_color -= 1.2;
-  } else {
-    step_color += 1.2;
-  }
-
-  step_br = (end_br - start_br) / abs(startY - endY);
-  if (start_br >  end_color) {
-    step_br -= 1.2;
-  } else {
-    step_br += 1.2;
-  }
-  for (uint8_t y = startY; y < endY; y++) {
-    CHSV thisColor = CHSV( (uint8_t) validMinMax((start_color + (y - startY) * step_color), 0, 255), saturate,
-                           (uint8_t) validMinMax((start_br + (y - startY) * step_br), 0, 255) );
-    for (uint8_t x = startX; x < endX; x++) {
-      drawPixelXY(x, y, thisColor);
-    }
-  }
-}
-
-//---------------------------------------
-// gradientDownTop • более плавный градиент в отличие от gradientVertical
-// но может некоректно работать на лампах собранных на ленточных светодиодах
-//---------------------------------------
-void gradientDownTop( uint8_t bottom, CHSV bottom_color, uint8_t top, CHSV top_color ) {
-  //  FORWARD_HUES: hue always goes clockwise
-  //  BACKWARD_HUES: hue always goes counter-clockwise
-  //  SHORTEST_HUES: hue goes whichever way is shortest
-  //  LONGEST_HUES: hue goes whichever way is longest
-  if (STRIP_DIRECTION < 2) {
-    // STRIP_DIRECTION to UP ========
-    fill_gradient(leds, top * WIDTH, top_color, bottom * WIDTH, bottom_color, SHORTEST_HUES);
-  } else {
-    // STRIP_DIRECTION to DOWN ======
-    fill_gradient(leds, NUM_LEDS - bottom * WIDTH - 1, bottom_color, NUM_LEDS - top * WIDTH, top_color, SHORTEST_HUES);
-  }
-}
 
 //---------------------------------------
 // New Effects
 //---------------------------------------
+
+uint8_t custom_eff = 0;
+uint16_t eff_timout;
+
 uint32_t colorDimm(uint32_t colorValue, long lenght, long pixel) {
 
   uint8_t red = (colorValue & 0x00FF0000) >> 16;
@@ -271,7 +82,7 @@ void colorsWine() {
   }
   // --------
 
-  // LOG.printf_P(PSTR("Wine | hue = %03d | Dir = %d | Brightness %03d | deltaHue2 %03d | divider %d | %d\n"), hue, deltaHue, hue2, deltaHue2, divider, step);
+  LOG.printf_P(PSTR("Wine | hue = %03d | Dir = %d | Brightness %03d | deltaHue2 %03d | divider %d | %d\n"), hue, deltaHue, hue2, deltaHue2, divider, step);
 
   // сдвигаем всё вверх -----------
   for (uint8_t x = 0U; x < WIDTH; x++) {
@@ -353,7 +164,7 @@ void Swirl() {
   color = colors[divider][hue];
   // drawPixelXY((hue2 + 1), (deltaHue2 - 1), 0x000000); // aded shadow
   drawPixelXY(hue2, deltaHue2, color);
-  // LOG.printf_P(PSTR("Swirl | hue = %03d | x= %03d | y= %03d | divider %d | %d\n"), hue, hue2, deltaHue2, divider, step);
+  LOG.printf_P(PSTR("Swirl | hue = %03d | x= %03d | y= %03d | divider %d | %d\n"), hue, hue2, deltaHue2, divider, step);
   // -------------------------------------
 
   hue2++;                     // x
@@ -462,7 +273,7 @@ void Ukraine() {
   }
   divider = floor((modes[currentMode].Scale - 1) / 10); // маштаб задает режим рестарта
   tMAX = timeout + 100 * divider;
-
+  
   if ((ff_x > timeout - 10) && (ff_x < timeout)) { // таймаут блокировки отрисовки флага
     if (ff_x < timeout - 5) {                  // размытие тризуба
       blurScreen(beatsin8(5U, 60U, 5U));
@@ -692,12 +503,29 @@ void animeBobbles() {
     }
   }
   // ----------------------
+
   if ( step % 4 == 0) {
     drawPixelXY(center + random8(5), 0U, 0xFFFFF7);
     if ( step % 12 == 0) {
       drawPixelXY(center + 2 + random8(3), 0U, 0xFFFFF7);
     }
   }
+}
+
+//---------------------------------------
+void gradientDownTop( uint8_t bottom, CHSV bottom_color, uint8_t top, CHSV top_color ) {
+  //  FORWARD_HUES: hue always goes clockwise
+  //  BACKWARD_HUES: hue always goes counter-clockwise
+  //  SHORTEST_HUES: hue goes whichever way is shortest
+  //  LONGEST_HUES: hue goes whichever way is longest
+  if (STRIP_DIRECTION < 2) {
+    // STRIP_DIRECTION to UP ========
+    fill_gradient(leds, top * WIDTH, top_color, bottom * WIDTH, bottom_color, SHORTEST_HUES);
+  } else {
+    // STRIP_DIRECTION to DOWN ======
+    fill_gradient(leds, NUM_LEDS - bottom * WIDTH - 1, bottom_color, NUM_LEDS - top * WIDTH, top_color, SHORTEST_HUES);
+  }
+  //  FastLED.show();
 }
 
 //---------------------------------------
@@ -729,48 +557,18 @@ void createScene(uint8_t idx) {
       break;
   }
   flora();
-}
 
-//---------------------------------------
-void createSceneM(uint8_t idx) {
-  switch (idx) {
-    case 0:     // blue green ------
-      gradientVertical(0, floor(HEIGHT * 0.5), WIDTH, HEIGHT, 96, 150, 100, 255, 255U);
-      gradientVertical(0, 0, WIDTH, floor(HEIGHT * 0.5), 96, 96, 255, 100, 255U);
-      break;
-    case 1:     // aquamarine green
-      gradientVertical(0, floor(HEIGHT  * 0.3), WIDTH, HEIGHT, 96, 120, 100, 220, 255U);
-      gradientVertical(0, 0, WIDTH, floor(HEIGHT  * 0.3), 96, 96, 255, 100, 255U);
-      break;
-    case 2:     // blue aquamarine -
-      gradientVertical(0, floor(HEIGHT * 0.5), WIDTH, HEIGHT, 170, 160, 100, 200, 255U);
-      gradientVertical(0, 0, WIDTH, floor(HEIGHT * 0.5), 100, 170, 255, 100, 255U);
-      break;
-    case 3:     // yellow green ----
-      gradientVertical(0, floor(HEIGHT * 0.5), WIDTH, HEIGHT, 95, 65, 55, 200, 255U);
-      gradientVertical(0, 0, WIDTH, floor(HEIGHT * 0.5), 95, 100, 255, 55, 255U);
-      break;
-    case 4:     // sea green -------
-      gradientVertical(0, floor(HEIGHT  * 0.3), WIDTH, HEIGHT, 120, 160, 55, 200, 255U);
-      gradientVertical(0, 0, WIDTH, floor(HEIGHT  * 0.3), 120, 120, 255, 55, 255U);
-      break;
-    default:
-      drawRec(0, 0, WIDTH, HEIGHT, 0x000050);
-      break;
-  }
-  flora();
+  //  TEST --------------
+  //  gradientDownTop(31, CHSV(0, 255, 255), 32, CHSV(0, 255, 50));
+  //  gradientDownTop(14, CHSV(0, 255, 255), 15, CHSV(0, 255, 255));
+  //  DrawLine(0, 12U, WIDTH, 12U, 0xff0000);
+  //  gradientDownTop(0, CHSV(0, 255, 255), 32, CHSV(0, 255, 50));
 }
 
 //---------------------------------------
 void BotswanaRivers() {
-  // альтернативный градиент для ламп собраных из лент с вертикальной компоновкой
-  // для корректной работы ALT_GRADIENT = true
-  // для ламп из лент с горизонтальной компоновкой и матриц ALT_GRADIENT = false
-  // ALT_GRADIENT = false более производительный и более плавная растяжка
-  //------------------------------------------------------------------------------
-  static const bool ALT_GRADIENT = false;
-
   uint8_t divider;
+
   if (loadingFlag) {
 #if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
     if (selectedSettings) {
@@ -782,11 +580,7 @@ void BotswanaRivers() {
     deltaValue = 255U - modes[currentMode].Speed + 1U;
     step = deltaValue;                                          // чтообы при старте эффекта сразу покрасить лампу
     divider = floor((modes[currentMode].Scale - 1) / 20);       // маштаб задает смену палитры воды
-    if (ALT_GRADIENT) {
-      createSceneM(divider);
-    } else {
-      createScene(divider);
-    }
+    createScene(divider);
   }
 
   if (step >= deltaValue) {
@@ -795,35 +589,30 @@ void BotswanaRivers() {
 
   // restore scene after power on ---------
   if (getPixColorXY(0U, HEIGHT - 2) == CRGB::Black) {
-    if (ALT_GRADIENT) {
-      createSceneM(divider);
-    } else {
-      createScene(divider);
-    }
+    createScene(divider);
   }
 
   // light at the bottom ------------------
-  if (!ALT_GRADIENT) {
-    if (step % 2 == 0) {
-      if (random8(6) == 1) {
-        //fill_gradient(leds, NUM_LEDS - WIDTH, CHSV(96U, 255U, 200U), NUM_LEDS, CHSV(50U, 255U, 255U), SHORTEST_HUES);
-        if (STRIP_DIRECTION < 2) {
-          fill_gradient(leds, 0, CHSV(96U, 255U, 190U), random8(WIDTH + random8(6)), CHSV(90U, 200U, 255U), SHORTEST_HUES);
-        } else {
-          fill_gradient(leds, NUM_LEDS - random8(WIDTH + random8(6)), CHSV(96U, 255U, 190U), NUM_LEDS, CHSV(90U, 200U, 255U), SHORTEST_HUES);
-        }
+  if (step % 2 == 0) {
+    if (random8(6) == 1) {
+      //fill_gradient(leds, NUM_LEDS - WIDTH, CHSV(96U, 255U, 200U), NUM_LEDS, CHSV(50U, 255U, 255U), SHORTEST_HUES);
+      if (STRIP_DIRECTION < 2) {
+        fill_gradient(leds, 0, CHSV(96U, 255U, 190U), random8(WIDTH + random8(6)), CHSV(90U, 200U, 255U), SHORTEST_HUES);
       } else {
-        //fill_gradient(leds, NUM_LEDS - WIDTH, CHSV(50U, 128U, 255U), NUM_LEDS, CHSV(90U, 255U, 180U), SHORTEST_HUES);
-        if (STRIP_DIRECTION < 2) {
-          fill_gradient(leds, 0, CHSV(85U, 128U, 255U), random8(WIDTH), CHSV(90U, 255U, 180U), SHORTEST_HUES);
-        } else {
-          fill_gradient(leds, NUM_LEDS - random8(WIDTH), CHSV(85U, 128U, 255U), NUM_LEDS, CHSV(90U, 255U, 180U), SHORTEST_HUES);
-        }
+        fill_gradient(leds, NUM_LEDS - random8(WIDTH + random8(6)), CHSV(96U, 255U, 190U), NUM_LEDS, CHSV(90U, 200U, 255U), SHORTEST_HUES);
+      }
+    } else {
+      //fill_gradient(leds, NUM_LEDS - WIDTH, CHSV(50U, 128U, 255U), NUM_LEDS, CHSV(90U, 255U, 180U), SHORTEST_HUES);
+      if (STRIP_DIRECTION < 2) {
+        fill_gradient(leds, 0, CHSV(85U, 128U, 255U), random8(WIDTH), CHSV(90U, 255U, 180U), SHORTEST_HUES);
+      } else {
+        fill_gradient(leds, NUM_LEDS - random8(WIDTH), CHSV(85U, 128U, 255U), NUM_LEDS, CHSV(90U, 255U, 180U), SHORTEST_HUES);
       }
     }
+    //    FastLED.show();
   }
 
-  // LOG.printf_P(PSTR("%02d | hue2 = %03d | min = %03d \n\r"), step, hue2, deltaHue2);
+  //  // LOG.printf_P(PSTR("%02d | hue2 = %03d | min = %03d \n\r"), step, hue2, deltaHue2);
   // -------------------------------------
   animeBobbles();
   if (custom_eff == 1) {
@@ -998,12 +787,13 @@ void FeatherCandleRoutine() {
   if (selectedSettings) {
     // brightness | scale | speed
     // { 21, 220,  40}
-    setModeSettings(1U + random8(99U), 190U + random8(65U));
+    setModeSettings(1U + random8(100U), 190U + random8(65U));
   }
 #endif
   if (loadingFlag) {
     FastLED.clear();
     hue = 0;
+    gradientDownTop(0, CHSV(255U, 0U, 128U), 2, CHSV(50U, 255, 128U));
     trackingObjectState[0] = low_level;
     trackingObjectState[1] = low_level;
     trackingObjectState[2] = low_level;
@@ -1037,11 +827,10 @@ void FeatherCandleRoutine() {
     if (HEIGHT < 15) {
       // for small matrix -----
       if (y % 2 == 0) {
-        leds[XY(floor(WIDTH * 0.5) - 1, 7)] = CHSV(color, 255U, 55 + random8(200));
-        leds[XY(floor(WIDTH * 0.5), 6)] = CHSV(color, 255U, 160 + random8(90));
-        leds[XY(floor(WIDTH * 0.5) + 1, 6)] = CHSV(color, 255U, 205 + random8(50));
-        leds[XY(floor(WIDTH * 0.5) - 1, 5)] = CHSV(color, 255U, 155 + random8(100));
-        leds[XY(floor(WIDTH * 0.5), 5)] = CHSV(color - 10U , 255U, 120 + random8(130));
+        leds[XY(floor(WIDTH * 0.5) - 2, 7)] = CHSV(color, 255U, 55 + random8(200));
+        leds[XY(floor(WIDTH * 0.5) - 1, 5)] = CHSV(color, 255U, 205 + random8(50));
+        leds[XY(floor(WIDTH * 0.5) - 1, 6)] = CHSV(color, 255U, 155 + random8(100));
+        leds[XY(floor(WIDTH * 0.5) - 2, 4)] = CHSV(color - 10U , 255U, 120 + random8(130));
         leds[XY(floor(WIDTH * 0.5), 4)] = CHSV(color - 10U , 255U, 100 + random8(120));
       }
     } else {
@@ -1051,11 +840,10 @@ void FeatherCandleRoutine() {
         i++;
       }
     }
-
     // draw body FeatherCandle ------
-    if (y <= 3) {
+    if (y <= 4) {
       if (y % 2 == 0) {
-        gradientVertical(0, 0, WIDTH, 2, color, color, 48, 128, 20U);
+        gradientDownTop(0, CHSV(50U, 16U, 32U), 3U, CHSV(color, 96U, 128U));
       }
     }
 
@@ -1113,432 +901,5 @@ void FeatherCandleRoutine() {
   if ((trackingObjectState[0] == level) || (trackingObjectState[1] == level) || (trackingObjectState[2] == level)) {
     hue++;
   }
-}
 
-// ============= Hourglass ==============
-//             © SlingMaster
-//             EFF_HOURGLASS
-//             Песочные Часы
-//---------------------------------------
-
-void Hourglass() {
-  uint8_t divider;
-  uint8_t h;
-  float SIZE = 0.43;
-  const uint8_t topPos  = HEIGHT - floor(HEIGHT * SIZE);
-  const uint8_t route = HEIGHT - floor(HEIGHT * SIZE) + 1;
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      //                          scale | speed 210
-      setModeSettings(15U + random8(225U), random8(255U));
-    }
-#endif
-    loadingFlag = false;
-    deltaValue = 255U - modes[currentMode].Speed + 1U;
-    step = deltaValue;                                          // чтообы при старте эффекта сразу покрасить лампу
-    deltaHue2 = 0;
-    h = floor(NUM_LEDS * SIZE / WIDTH) * WIDTH;
-    FastLED.clear();
-    hue2 = 0;
-  }
-  if (hue2 == 0) {
-
-
-    divider = modes[currentMode].Scale;
-    if (divider < 10) {
-      hue = step;
-    } else {
-      hue = divider * 2.55;
-    }
-
-    if (STRIP_DIRECTION < 2) {
-      // STRIP_DIRECTION to UP ========
-      fill_gradient(leds, NUM_LEDS - h, CHSV(hue, 255, 254), NUM_LEDS - deltaHue2, CHSV(hue, 255, 30), SHORTEST_HUES);
-      fill_gradient(leds, 0, CHSV(hue, 255, 254), deltaHue2, CHSV(hue, 255, 30), SHORTEST_HUES);
-    } else {
-      // STRIP_DIRECTION to DOWN ======
-      fill_gradient(leds, deltaHue2, CHSV(hue, 255, 30), h, CHSV(hue, 255, 254), SHORTEST_HUES);
-      fill_gradient(leds, NUM_LEDS - deltaHue2, CHSV(hue, 255, 30), NUM_LEDS, CHSV(hue, 255, 254), SHORTEST_HUES);
-    }
-
-    //  if (deltaHue2 % 2 == 0) {
-    //      drawPixelXY(center, topPos - 1, CHSV(hue, 255, 100));
-    //  }
-    //  for (uint8_t y = floor(deltaHue2 / WIDTH)-1; y < topPos; y++) {
-    //    drawPixelXY(center, y, getPixColorXY(center, y + 1U));
-    //  }
-
-    if (custom_eff == 1) {
-      if (deltaHue2 < WIDTH) {
-        blurScreen(8U);
-      }
-    }
-    deltaHue2++;
-    if (deltaHue2 > h) {
-      deltaHue2 = 0;
-      hue2 = 1;
-      // борьба с артифактом -----
-      DrawLine(0, topPos, WIDTH - 1, topPos, 0x000000);
-    }
-    step++;
-  }
-
-  // сдвигаем всё вверх -----------
-  // имитация переворота песочных часов
-  if (hue2 > 0) {
-    for (uint8_t x = 0U; x < WIDTH; x++) {
-      for (uint8_t y = HEIGHT; y > 0U; y--) {
-        drawPixelXY(x, y, getPixColorXY(x, y - 1U));
-        drawPixelXY(x, y - 1, 0x000000);
-      }
-    }
-    hue2++;
-    if (hue2 > route) {
-      hue2 = 0;
-    }
-  }
-}
-
-// ============== Spectrum ==============
-//             © SlingMaster
-//              EFF_SPECTRUM
-//                Spectrum
-//---------------------------------------
-
-void  Spectrum() {
-  uint8_t divider;
-  uint8_t deltaY;
-  uint8_t posX;
-  const uint8_t center = floor(HEIGHT  * 0.5);
-
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      //                     scale | speed 210
-      setModeSettings(random8(100U), 180U + random8(75U));
-    }
-#endif
-    loadingFlag = false;
-    step = deltaValue;
-    hue = 120;
-    hue2 = hue + 30;
-    posX = 0;
-    deltaHue2 = 0;
-    divider = floor(modes[currentMode].Scale / 12.5);
-    if (divider % 2 == 0) {
-      blurScreen(dim8_raw(beatsin8(3, 64, 3)));
-      DrawLine(3, 0, 4, 0 , 0x00FF00);
-    } else {
-      FastLED.clear();
-      DrawLine(3, 0, 4, 0 , 0xFF3F00);
-    }
-  }
-
-  deltaHue2++;
-  if (deltaHue2 >= WIDTH) {
-    deltaHue2 = 0;
-  }
-  divider = floor(modes[currentMode].Scale / 12.5);
-  posX = deltaHue2;
-  deltaY = floor((HEIGHT - validMinMax(random8(HEIGHT - 1), 3, HEIGHT)) * 0.5);
-
-  switch (divider ) {
-    case 0:
-    case 1:
-      if (step % 32 == 0) {
-        hue++;
-      }
-      break;
-    case 2:
-    case 3:
-      if (step % 2 == 0) {
-        hue++;
-      }
-      break;
-    case 4:
-    case 5:
-      if (step == 0) {
-        hue += 30;
-      }
-      break;
-    default:
-      if (step == 0) {
-        hue += 10;
-        hue2 -= 10;
-      }
-      break;
-  }
-
-  if (divider < 6) {
-    if (hue >= 225) {
-      hue2 = 224;
-    } else {
-      hue2 = hue + 30;
-    }
-  }
-
-  // if (step % 32 == 0) {
-  //   LOG.printf_P(PSTR("divider = %01d | hue = %03d | hue2 = %03d | scale = %03d | BR = %03d\n\r"), divider, hue, hue2, modes[currentMode].Scale, (deltaValue));
-  // }
-
-  deltaValue = random8(128);          // delta brightness
-  if (posX % 2 == 0) {
-    if (divider < 6) {
-      gradientVertical(posX, center, posX + 1, center + random8(2), hue + 15, hue2 - 15, 128 + deltaValue, 255 - deltaValue, 255U);
-    }
-    DrawLine(posX, HEIGHT - deltaY, posX, HEIGHT - 1, 0x000000);
-    DrawLine(posX, 0, posX, deltaY , 0x000000);
-  } else {
-    gradientVertical(posX, deltaY, posX + 1, HEIGHT - deltaY, hue, hue2, 128 + deltaValue, 255 - deltaValue, 255U);
-  }
-
-  if (divider % 2 == 0) {
-    blurScreen(6U);
-  } else {
-    DrawLine(posX, HEIGHT - deltaY, posX, HEIGHT - 1, 0x000000);
-    DrawLine(posX, 0, posX, deltaY , 0x000000);
-    dimAll(255 - posX);
-  }
-  step++;
-}
-
-// ============ Lotus Flower ============
-//             © SlingMaster
-//               EFF_LOTUS
-//             Цветок Лотоса
-//---------------------------------------
-void  Flower() {
-  uint8_t br;
-  if (step < 128) {
-    br = 255 - step;  // 255 >> 128
-  } else {
-    br = step;        // 128 >> 255
-  }
-  if (modes[currentMode].Scale > 10) {
-    dimAll(90);
-    hue = floor(modes[currentMode].Scale * 1.9) + floor(br / 4);
-  } else {
-    FastLED.clear();
-    hue = step;
-  }
-  if (step > 190) {
-    hue2 = validMinMax(hue - 64 + floor(br / 4), 190, 250);
-  } else {
-    hue2 = hue + 64 - floor(br / 4);
-  }
-
-  for (uint8_t x = 0U ; x < WIDTH ; x++) {
-    if (x % 6 == 0) {
-      gradientVertical( x - deltaValue, 2U, x + 1 - deltaValue, HEIGHT - floor((255 - br) / 24) - random8(2), hue, hue2, 255, floor(br * 0.5), 255U);
-      gradientVertical( x + 3U - deltaValue, 0U, x + 4U - deltaValue, HEIGHT - floor(br / 24) + random8(3), hue, hue2, 255, floor((255 - br * 0.5)), 255U);
-      drawPixelXY(x - deltaValue, 0, 0x005F00);
-    }
-  }
-}
-
-//---------------------------------------
-void LotusFlower() {
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      //                     scale | speed
-      setModeSettings(random8(100U), 50U + random8(190U));
-    }
-#endif
-    loadingFlag = false;
-    deltaValue = 0;
-    step = deltaValue;
-    deltaValue = 0;
-    hue = 120;
-    hue2 = 0;
-    deltaHue = 0;
-    deltaHue2 = 0;
-    FastLED.clear();
-  }
-
-  Flower();
-  if (deltaHue == 0) {               // rotation
-    deltaValue--;
-    if (deltaValue <= 0) {
-      deltaValue = 3;
-    }
-  } else {
-    deltaValue++;
-    if (deltaValue >= 3) {
-      deltaValue = 0;
-    }
-  }
-  deltaHue2++;
-  if (deltaHue2 >= 18) {           // swap direction rotate
-    deltaHue2 = 0;
-    deltaHue = (deltaHue == 0) ? 1 : 0;
-  }
-  step++;
-}
-
-// =========== Christmas Tree ===========
-//             © SlingMaster
-//           EFF_CHRISTMAS_TREE
-//            Новогодняя Елка
-//---------------------------------------
-void VirtualSnow() {
-  for (uint8_t x = 0U; x < WIDTH; x++) {
-    for (uint8_t y = 0U; y < HEIGHT - 1; y++) {
-      noise3d[0][x][y] = noise3d[0][x][y + 1];
-      if (noise3d[0][x][y] > 0) {
-        drawPixelXY(x, y, CHSV(170, 5U, 127 + random8(128)));
-      }
-    }
-  }
-  uint8_t posX = random(WIDTH);
-  for (uint8_t x = 0U; x < WIDTH; x++) {
-    // заполняем случайно верхнюю строку
-    if (posX == x) {
-      if (step % 3 == 0) {
-        noise3d[0][x][HEIGHT - 1U] = 1;
-      } else {
-        noise3d[0][x][HEIGHT - 1U]  = 0;
-      }
-    } else {
-      noise3d[0][x][HEIGHT - 1U]  = 0;
-    }
-  }
-}
-
-//---------------------------------------
-void GreenTree() {
-  hue = floor(step / 32) * 32U;
-  FastLED.clear();
-  for (uint8_t x = 0U; x < WIDTH + 1 ; x++) {
-    if (x % 8 == 0) {
-      if (modes[currentMode].Scale < 60) {
-        // nature -----
-        DrawLine(x - 1U - deltaValue, floor(HEIGHT * 0.70), x + 1U - deltaValue, floor(HEIGHT * 0.70), 0x002F00);
-        DrawLine(x - 1U - deltaValue, floor(HEIGHT * 0.55), x + 1U - deltaValue, floor(HEIGHT * 0.55), 0x004F00);
-        DrawLine(x - 2U - deltaValue, floor(HEIGHT * 0.35), x + 2U - deltaValue, floor(HEIGHT * 0.35), 0x005F00);
-        DrawLine(x - 2U - deltaValue, floor(HEIGHT * 0.15), x + 2U - deltaValue, floor(HEIGHT * 0.15), 0x007F00);
-        drawPixelXY(x - 3U - deltaValue, floor(HEIGHT * 0.15), 0x001F00);
-        drawPixelXY(x + 3U - deltaValue, floor(HEIGHT * 0.15), 0x001F00);
-        gradientVertical( x - deltaValue, 0U, x + 1U - deltaValue, HEIGHT, 96U, 97U, 190U, 32U, 255U);
-      } else {
-        // holiday -----
-        //        drawPixelXY(x - 1 - deltaValue, floor(HEIGHT * 0.5), CHSV(floor(random8(255) / 32) * 32U, 255U, 128 + random8(128)));
-        //        drawPixelXY(x + 1 - deltaValue, floor(HEIGHT * 0.5), CHSV(floor(random8(90) / 32) * 32U, 255U, 128 + random8(128)));
-        //        drawPixelXY(x - deltaValue, floor(HEIGHT * 0.2), CHSV(floor(random8(255) / 32) * 32U, 255U, 128 + random8(128)));
-        //        drawPixelXY(x - 2 - deltaValue, floor(HEIGHT * 0.25), CHSV(floor(random8(90) / 32) * 32U, 255U, 128 + random8(128)));
-        //        drawPixelXY(x + 2 - deltaValue, floor(HEIGHT * 0.25), CHSV(floor(random8(255) / 32) * 32U, 255U, 128 + random8(128)));
-        //        drawPixelXY(x - deltaValue, 0U, CHSV(96U, 255U, 200U));
-
-        drawPixelXY(x - 1 - deltaValue, floor(HEIGHT * 0.6), CHSV(step, 255U, 128 + random8(128)));
-        drawPixelXY(x + 1 - deltaValue, floor(HEIGHT * 0.6), CHSV(step, 255U, 128 + random8(128)));
-
-        drawPixelXY(x - deltaValue, floor(HEIGHT * 0.4), CHSV(step, 255U, 200U));
-
-        drawPixelXY(x - deltaValue, floor(HEIGHT * 0.2), CHSV(step, 255U, 190 + random8(65)));
-        drawPixelXY(x - 2 - deltaValue, floor(HEIGHT * 0.25), CHSV(step, 255U, 96 + random8(128)));
-        drawPixelXY(x + 2 - deltaValue, floor(HEIGHT * 0.25), CHSV(step, 255U, 96 + random8(128)));
-
-        drawPixelXY(x - 2 - deltaValue, 1U, CHSV(step, 255U, 200U));
-        drawPixelXY(x - deltaValue, 0U, CHSV(step, 255U, 250U));
-        drawPixelXY(x + 2 - deltaValue, 1U, CHSV(step, 255U, 200U));
-
-        gradientVertical( x - deltaValue, floor(HEIGHT * 0.75), x + 1U - deltaValue, HEIGHT,  hue, hue + 2, 250U, 0U, 128U);
-      }
-    }
-  }
-}
-
-//---------------------------------------
-void ChristmasTree() {
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      //                     scale | speed
-      setModeSettings(random8(100U), 10U + random8(128U));
-    }
-#endif
-    loadingFlag = false;
-    deltaValue = 0;
-    step = deltaValue;
-    FastLED.clear();
-  }
-
-  GreenTree();
-  if (modes[currentMode].Scale < 60) {
-    VirtualSnow();
-  }
-  if (modes[currentMode].Scale > 30) {
-    deltaValue++;
-  }
-  if (deltaValue >= 8) {
-    deltaValue = 0;
-  }
-  step++;
-}
-
-// ============== ByEffect ==============
-//             © SlingMaster
-//             EFF_BY_EFFECT
-//            Побочный Эффект
-// --------------------------------------
-void ByEffect() {
-  uint8_t saturation;
-  uint8_t delta;
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      //                     scale | speed 210
-      setModeSettings(random8(100U), random8(200U));
-    }
-#endif
-    loadingFlag = false;
-    deltaValue = 0;
-    step = deltaValue;
-    FastLED.clear();
-  }
-
-  hue = floor(step / 32) * 32U;
-  dimAll(180);
-  // ------
-  saturation = 255U;
-  delta = 0;
-  for (uint8_t x = 0U; x < WIDTH + 1 ; x++) {
-    if (x % 8 == 0) {
-      gradientVertical( x - deltaValue, floor(HEIGHT * 0.75), x + 1U - deltaValue, HEIGHT,  hue, hue + 2, 250U, 0U, 255U);
-      if (modes[currentMode].Scale > 50) {
-        delta = random8(200U);
-      }
-      drawPixelXY(x - 2 - deltaValue, floor(HEIGHT * 0.7), CHSV(step, saturation - delta, 128 + random8(128)));
-      drawPixelXY(x + 2 - deltaValue, floor(HEIGHT * 0.7), CHSV(step, saturation, 128 + random8(128)));
-
-      drawPixelXY(x - deltaValue, floor(HEIGHT * 0.6), CHSV(hue, 255U, 190 + random8(65)));
-      if (modes[currentMode].Scale > 50) {
-        delta = random8(200U);
-      }
-      drawPixelXY(x - 1 - deltaValue, floor(HEIGHT * 0.5), CHSV(step, saturation, 128 + random8(128)));
-      drawPixelXY(x + 1 - deltaValue, floor(HEIGHT * 0.5), CHSV(step, saturation - delta, 128 + random8(128)));
-
-      drawPixelXY(x - deltaValue, floor(HEIGHT * 0.4), CHSV(hue, 255U, 200U));
-      if (modes[currentMode].Scale > 50) {
-        delta = random8(200U);
-      }
-      drawPixelXY(x - 2 - deltaValue, floor(HEIGHT * 0.3), CHSV(step, saturation - delta, 96 + random8(128)));
-      drawPixelXY(x + 2 - deltaValue, floor(HEIGHT * 0.3), CHSV(step, saturation, 96 + random8(128)));
-
-      gradientVertical( x - deltaValue, 0U, x + 1U - deltaValue, floor(HEIGHT * 0.25),  hue + 2, hue, 0U, 250U, 255U);
-      
-      if (modes[currentMode].Scale > 50) {     
-        drawPixelXY(x + 3 - deltaValue, HEIGHT - 3U, CHSV(step, 255U, 255U));
-        drawPixelXY(x - 3 - deltaValue, floor(HEIGHT * 0.5), CHSV(step, 255U, 255U)); 
-        drawPixelXY(x + 3 - deltaValue, 2U, CHSV(step, 255U, 255U));
-      }
-    }  
-  }
-  // ------
-  deltaValue++;
-  if (deltaValue >= 8) {
-    deltaValue = 0;
-  }
-  step++;
 }

@@ -78,9 +78,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         }
       }
       #endif // GET_TIME_FROM_PHONE
-      if (inputBuffer[3] == '-') sendCurrent(inputBuffer);
-      else NEWsendCurrent(inputBuffer);
-      
+      sendCurrent(inputBuffer);
     }
 #if defined(GENERAL_DEBUG) || defined(USE_OLD_IOS_APP)
     else if (!strncmp_P(inputBuffer, PSTR("DEB"), 3))
@@ -180,11 +178,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     else if (!strncmp_P(inputBuffer, PSTR("P_ON"), 4))
     {
       if (dawnFlag) {
-        manualOff = true;
+        manualOff = true; 
         dawnFlag = false;
-        clockTicker_blink();
-        FastLED.setBrightness(modes[currentMode].Brightness);
-        changePower();
         sendCurrent(inputBuffer);
       }
       else {
@@ -205,11 +200,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     else if (!strncmp_P(inputBuffer, PSTR("P_OFF"), 5))
     {
       if (dawnFlag) {
-        manualOff = true;
+        manualOff = true; 
         dawnFlag = false;
-        clockTicker_blink();
-        FastLED.setBrightness(modes[currentMode].Brightness);
-        changePower();
         sendCurrent(inputBuffer);
       }
       else {
@@ -464,31 +456,19 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
          updateRemoteBlynkParams();
          #endif
        }
-       else if (!strncmp_P(inputBuffer, PSTR("RND_C1"), 5)) // Включаем случайный выбор эффектов в цикле
-       {
-        FavoritesManager::rndCycle = 1;
-	    jsonWrite(configSetup, "rnd_cycle", 1);
-        saveConfig();
-       }
-       else if (!strncmp_P(inputBuffer, PSTR("RND_C0"), 5)) // Выключаем случайный выбор эффектов в цикле
-       {
-        FavoritesManager::rndCycle = 0;
-	    jsonWrite(configSetup, "rnd_cycle", 0);
-        saveConfig();
-       }
        else if (!strncmp_P(inputBuffer, PSTR("RND_ON"), 6)) // включить выбор случайных настроек в режиме Цикл
        {
          random_on = 1U;
 		jsonWrite(configSetup, "random_on", (int)random_on);
 		saveConfig();  
-         showWarning(CRGB::Blue, 1000U, 500U);                    // мигание синим цветом 1 секунды
+         showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
        }
        else if (!strncmp_P(inputBuffer, PSTR("RND_OFF"), 7)) // отключить выбор случайных настроек в режиме Цикл
        {
          random_on = 0U;
 		jsonWrite(configSetup, "random_on", (int)random_on);
 		saveConfig();  
-         showWarning(CRGB::Blue, 1000U, 500U);                    // мигание синим цветом 1 секунды
+         showWarning(CRGB::Blue, 2000U, 500U);                    // мигание синим цветом 2 секунды
        }
     }
     #endif //#ifdef USE_RANDOM_SETS_IN_APP
@@ -527,32 +507,6 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
            }
          }
     }
-    else if (!strncmp_P(inputBuffer, PSTR("ssid"), 4)){        // Сохрание SSID для подключения к WiFi роутера
-      jsonWrite(configSetup, "ssid", BUFF.substring(5, BUFF.length()));        
-      saveConfig();            
-    }
-    else if (!strncmp_P(inputBuffer, PSTR("passw"), 5)){        // Сохрание пароля для подключения к WiFi роутера 
-      jsonWrite(configSetup, "password", BUFF.substring(6, BUFF.length()));        
-      saveConfig();            
-    }          
-    else if (!strncmp_P(inputBuffer, PSTR("timeout"), 7)){     // Сохрание таймаута - времени попытки подключения к WiFi роутера
-      jsonWrite(configSetup, "TimeOut", BUFF.substring(8, BUFF.length()));        
-      saveConfig();            
-    }
-    else if (!strncmp_P(inputBuffer, PSTR("esp_mode=0"), 10)){  // Изменение режима на точку доступа
-		espMode = 0U;
-		jsonWrite(configSetup, "ESP_mode", (int)espMode);
-		saveConfig();  
-		showWarning(CRGB::Blue, 1000U, 500U);                    // мигание синим цветом 1 секунду - смена рабочего режима лампы, перезагрузка
-		ESP.restart();
-	}
-	else if (!strncmp_P(inputBuffer, PSTR("esp_mode=1"), 10)){  // Изменение режима для использования подключения к роутеру
-		espMode = 1U;
-		jsonWrite(configSetup, "ESP_mode", (int)espMode);
-		saveConfig();  
-		showWarning(CRGB::Blue, 1000U, 500U);                    // мигание синим цветом 1 секунду - смена рабочего режима лампы, перезагрузка
-		ESP.restart();
-	}    
     else if (!strncmp_P(inputBuffer, PSTR("TXT"), 3)){     // Принимаем текст для бегущей строки
       #if defined(USE_SECRET_COMMANDS) || defined(USE_MANUAL_TIME_SETTING) // вкорячиваем ручную синхранизацию времени пока что сюда. пока нет другой функции в приложении...
         if (!strncmp_P(inputBuffer, PSTR("TXT-time="), 9) && (BUFF.length() > 15)){ 
@@ -929,50 +883,6 @@ void sendCurrent(char *outputBuffer)
 
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)TimerManager::TimerRunning);
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)buttonEnabled);
-
-  //#ifdef USE_NTP
-  #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
-  char timeBuf[9];
-  getFormattedTime(timeBuf);
-  sprintf_P(outputBuffer, PSTR("%s %s"), outputBuffer, timeBuf);
-  #else
-  time_t currentTicks = millis() / 1000UL;
-  sprintf_P(outputBuffer, PSTR("%s %02u:%02u:%02u"), outputBuffer, hour(currentTicks), minute(currentTicks), second(currentTicks));
-  #endif
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)Sound_Volum);
-}
-
-void NEWsendCurrent(char *outputBuffer)
-{
-  #ifdef GENERAL_DEBUG
-  LOG.println ("NEWsendCurrent");
-  #endif
-  sprintf_P(outputBuffer, PSTR("NEWCURR %u %u %u %u %u %u %u %u %u %u %u %u"),
-    currentMode,
-    modes[currentMode].Brightness,
-    modes[currentMode].Speed,
-    modes[currentMode].Scale,
-    ONflag,
-    espMode,
-  #ifdef USE_NTP
-  1,
-  #else
-  0,
-  #endif
-    TimerManager::TimerRunning,
-    buttonEnabled,
-    FavoritesManager::FavoritesRunning,
-    FavoritesManager::rndCycle,
-    random_on);
-  
-  //#ifdef USE_NTP
-  //strcat_P(outputBuffer, PSTR(" 1"));
-  //#else
-  //strcat_P(outputBuffer, PSTR(" 0"));
-  //#endif
-
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)TimerManager::TimerRunning);
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)buttonEnabled);
 
   //#ifdef USE_NTP
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)

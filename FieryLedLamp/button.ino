@@ -23,6 +23,7 @@ void buttonTick()
     {
       manualOff = true;
       dawnFlag = false;
+      clockTicker_blink();
       FastLED.setBrightness(modes[currentMode].Brightness);
       changePower();
     }
