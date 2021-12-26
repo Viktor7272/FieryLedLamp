@@ -114,8 +114,13 @@ void effectsTick()
         case EFF_PAINTS:              OilPaints();                        break;  // (89U) Масляные Краски
         case EFF_WATERCOLOR:          Watercolor();                       break;  // (90U) Акварель
         case EFF_FEATHER_CANDLE:      FeatherCandleRoutine();             break;  // (91U) Свеча
-        case EFF_CLOCK:               clockRoutine();                     break;  // (92U) Чacы
-        case EFF_TEXT:                text_running();                     break;  // (93U) Бeгyщaя cтpoкa
+        case EFF_HOURGLASS:           Hourglass();                        break;  // (92U) Песочные Часы
+        case EFF_SPECTRUM:            Spectrum();                         break;  // (93U) Спектрум
+        case EFF_LOTUS:               LotusFlower();                      break;  // (94U) Цветок Лотоса
+        case EFF_CHRISTMAS_TREE:      ChristmasTree();                    break;  // (95U) Новогодняя Елка
+        case EFF_BY_EFFECT:           ByEffect();                         break;  // (96U) Побочный Эффект
+        case EFF_CLOCK:               clockRoutine();                     break;  // (97U) Чacы
+        case EFF_TEXT:                text_running();                     break;  // (98U) Бeгyщaя cтpoкa
       }
       #ifdef WARNING_IF_NO_TIME_ON_EFFECTS_TOO
         if (!timeSynched)
