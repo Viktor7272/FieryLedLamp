@@ -182,7 +182,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       if (dawnFlag) {
         manualOff = true;
         dawnFlag = false;
+        #ifdef TM1637_USE
         clockTicker_blink();
+        #endif
         FastLED.setBrightness(modes[currentMode].Brightness);
         changePower();
         sendCurrent(inputBuffer);
@@ -207,7 +209,9 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       if (dawnFlag) {
         manualOff = true;
         dawnFlag = false;
+        #ifdef TM1637_USE
         clockTicker_blink();
+        #endif
         FastLED.setBrightness(modes[currentMode].Brightness);
         changePower();
         sendCurrent(inputBuffer);

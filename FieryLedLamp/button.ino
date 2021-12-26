@@ -23,7 +23,9 @@ void buttonTick()
     {
       manualOff = true;
       dawnFlag = false;
+      #ifdef TM1637_USE
       clockTicker_blink();
+      #endif
       FastLED.setBrightness(modes[currentMode].Brightness);
       changePower();
     }
