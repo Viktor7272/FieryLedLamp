@@ -182,7 +182,9 @@ if (stillUseNTP)
         if (dawnFlag)
         {
           dawnFlag = false;
+          #ifdef TM1637_USE
           clockTicker_blink();
+          #endif
           FastLED.clear();
           delay(2);
           FastLED.show();

@@ -146,7 +146,9 @@ void handle_night_time ()  {
 	NIGHT_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "night_bright");
 	NIGHT_HOURS_STOP = 60U * jsonReadtoInt(configSetup, "day_time");
 	DAY_HOURS_BRIGHTNESS = jsonReadtoInt(configSetup, "day_bright");
+    #ifdef TM1637_USE
     clockTicker_blink();
+    #endif
 	HTTP.send(200, "text/plain", "OK");
  }
 
@@ -381,7 +383,9 @@ void handle_Power ()  {
     if (dawnFlag) {
       manualOff = true;
       dawnFlag = false;
+      #ifdef TM1637_USE
       clockTicker_blink();
+      #endif
       FastLED.setBrightness(modes[currentMode].Brightness);
       changePower();
     }

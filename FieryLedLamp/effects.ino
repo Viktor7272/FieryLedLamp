@@ -8357,34 +8357,36 @@ void sandRoutine() {
 
 // ============= Эффект Плазменная лампа ===============
 // эффект Паук (c) stepko
-// плюс выбор палитры (c) SottNick
+// плюс выбор палитры и багфикс (c) SottNick
 
 void spiderRoutine() {
-  if (loadingFlag) {
-#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-    if (selectedSettings) {
-      uint8_t tmp = random8(5U);
-      if (tmp > 1U) tmp += 3U;
-      setModeSettings(tmp * 11U + 3U + random8(7U), 1U + random8(180U));
-    }
-#endif //#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
-
-    loadingFlag = false;
-    setCurrentPalette();
-    pcnt = (modes[currentMode].Scale - 1U) % 11U + 1U; // количество линий от 1 до 11 для каждой из 9 палитр
-    speedfactor = fmap(modes[currentMode].Speed, 1, 255, 20., 2.);
-  }
-  if (hue2++ & 0x01 && deltaHue++ & 0x01 && deltaHue2++ & 0x01) hue++; // хз. как с 60ю кадрами в секунду скорость замедлять...
-  dimAll(205);
-  for (uint8_t c = 0; c < pcnt; c++) {
-    float xx = 2. + sin8((float)millis() / speedfactor + 6000 * c) / 12.;
-    float yy = 2. + cos8((float)millis() / speedfactor + 9000 * c) / 12.;
-    //DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, CHSV(c * (256 / pcnt), 200, 255)); // так было в оригинале
-    //if (modes[currentMode].Speed & 0x01)
-    //DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, ColorFromPalette(*curPalette, hue + c * (255 / pcnt)).nscale8(200)); // кажется, это не работает, хотя и компилируется
-    //else
-    DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, ColorFromPalette(*curPalette, hue + c * (255 / pcnt)));
-  }
+ if (loadingFlag) {
+   #if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
+     if (selectedSettings){
+       uint8_t tmp = random8(5U);
+       if (tmp > 1U) tmp += 3U;
+       setModeSettings(tmp*11U+3U+random8(7U), 1U+random8(180U));
+     }
+   #endif //#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
+   
+   loadingFlag = false;
+   setCurrentPalette();
+   pcnt = (modes[currentMode].Scale - 1U) % 11U + 1U; // количество линий от 1 до 11 для каждой из 9 палитр
+   speedfactor = fmap(modes[currentMode].Speed, 1, 255, 20., 2.); 
+ }
+ if (hue2++ & 0x01 && deltaHue++ & 0x01 && deltaHue2++ & 0x01) hue++; // хз. как с 60ю кадрами в секунду скорость замедлять...
+ dimAll(205);
+ float time_shift = millis() & 0x7FFFFF; // overflow protection proper by SottNick
+ time_shift /= speedfactor;
+ for (uint8_t c = 0; c < pcnt; c++) {
+   float xx = 2. + sin8(time_shift + 6000 * c) / 12.;
+   float yy = 2. + cos8(time_shift + 9000 * c) / 12.;
+   //DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, CHSV(c * (256 / pcnt), 200, 255)); // так было в оригинале
+//if (modes[currentMode].Speed & 0x01)
+//DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, ColorFromPalette(*curPalette, hue + c * (255 / pcnt)).nscale8(200)); // кажется, это не работает, хотя и компилируется
+//else
+   DrawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, ColorFromPalette(*curPalette, hue + c * (255 / pcnt)));
+ }
 }
 
 // --------- Эффект "Северное Сияние"
