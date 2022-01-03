@@ -843,3 +843,17 @@ bool FileCopy (String SourceFile , String TargetFile)   {
   T_File.close();
   return true;
 }
+
+void EffectList (String efflist )   {
+    //String EffList;
+    File R_File = SPIFFS.open ( efflist, "r" );
+    if (!R_File) Serial.println (F("Ошибка. Файл списка эффектов для передачи приложению не найден!"));
+    String EffList = R_File.readString();
+    #ifdef GENERAL_DEBUG
+    LOG.print ("EffList = ");
+    LOG.println (EffList.c_str());
+    #endif //GENERAL_DEBUG
+    Udp.write(EffList.c_str());
+    Udp.write("\0");
+    R_File.close ();
+}

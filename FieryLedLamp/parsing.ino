@@ -503,20 +503,23 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
          {
            case 1U:
            {
-             Udp.write(efList_1.c_str());
-             Udp.write("\0");
+             //Udp.write(efList_1.c_str());
+             //Udp.write("\0");
+             EffectList ("/efflist1.ini");
              break;
            }
            case 2U:
            {
-             Udp.write(efList_2.c_str());
-             Udp.write("\0");
+             //Udp.write(efList_2.c_str());
+             //Udp.write("\0");
+             EffectList ("/efflist2.ini");
              break;
            }
            case 3U:
            {
-             Udp.write(efList_3.c_str());
-             Udp.write("\0");
+             //Udp.write(efList_3.c_str());
+             //Udp.write("\0");
+             EffectList ("/efflist3.ini");
 
              #ifdef USE_DEFAULT_SETTINGS_RESET
              // и здесь же после успешной отправки списка эффектов делаем сброс настроек эффектов на значения по умолчанию

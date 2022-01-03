@@ -384,14 +384,17 @@ void setup()  //================================================================
   multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
 #endif //USE_MULTIPLE_LAMPS_CONTROL
   
-  #ifdef GENERAL_DEBUG
+  #ifdef EFFECT_REESTR_LENGTH && GENERAL_DEBUG
   LOG.print(F("\nДлинна 1й строки = "));
   LOG.println ( efList_1.length() );
+  LOG.println ( efList_1 );
   LOG.print(F("Длинна 2й строки = "));
   LOG.println ( efList_2.length() );
+  LOG.println ( efList_2 );
   LOG.print(F("Длинна 3й строки = "));
   LOG.println ( efList_3.length() );
-  #endif
+  LOG.println ( efList_3 );
+  #endif  //EFFECT_REESTR_LENGTH && GENERAL_DEBUG
 
   // WI-FI
   
