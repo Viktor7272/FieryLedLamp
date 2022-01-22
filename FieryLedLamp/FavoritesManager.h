@@ -11,6 +11,8 @@
     uint8_t shuffleFavoriteModes[MODE_AMOUNT];
     uint8_t shuffleCurrentIndex = MODE_AMOUNT; // начальное значение увеличивается на 1 и затем сравнивается с MODE_AMOUNT, чтобы создать первоначальное перемешивание режимов
 #endif
+bool repeat_multiple_lamp_control = false;
+
 
 ModeType modes[MODE_AMOUNT];
 
@@ -113,13 +115,16 @@ class FavoritesManager
       if (millis() >= nextModeAt)
       {
         *currentMode = getNextFavoriteMode(currentMode);
-		jsonWrite(configSetup, "eff_sel", *currentMode);
-		jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
-		jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
-		jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
+        
+		//jsonWrite(configSetup, "eff_sel", *currentMode);
+		//jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
+		//jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
+		//jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
         #ifdef USE_MULTIPLE_LAMPS_CONTROL
-        multiple_lamp_control ();
+        //multiple_lamp_control ();
+        repeat_multiple_lamp_control = true;
         #endif //USE_MULTIPLE_LAMPS_CONTROL
+        
         *loadingFlag = true;
         nextModeAt = getNextTime();
 

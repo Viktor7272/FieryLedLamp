@@ -19,6 +19,7 @@ void parseUDP()
     }
 
     char reply[MAX_UDP_BUFFER_SIZE];
+    reply [0] = '\0';
     processInputBuffer(inputBuffer, reply, true);
 
     #if (USE_MQTT)                                          // отправка ответа выполнения команд по MQTT, если разрешено
@@ -121,6 +122,89 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       FastLED.setBrightness(modes[currentMode].Brightness);
     }
 
+    #ifdef MP3_TX_PIN
+    else if (!strncmp_P(inputBuffer, PSTR("VOL"), 3))
+    {
+      memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+      uint8_t eff_sound_on_tmp = (uint8_t)atoi(buff);
+      if (eff_sound_on_tmp)  {
+          eff_sound_on = eff_volume = constrain( eff_sound_on_tmp, 1,30 );
+          //modes[EFF_VOICE].Scale = 51;
+          }
+      else
+          if (!eff_sound_on) {
+              eff_sound_on = eff_volume;
+              //modes[EFF_VOICE].Scale = 51;
+              }
+          else {
+              eff_sound_on = 0;
+              //modes[EFF_VOICE].Scale = 1;
+              }
+      //modes[EFF_VOICE].Speed=eff_volume*8.2;
+      
+      //if (((uint8_t)atoi(buff) => 0) && ((uint8_t)atoi(buff) < 31)) cmdbuf[6] = (byte)atoi(buff);
+      //else cmdbuf[6] =0x0A;
+      
+      myDFPlayer.volume(eff_volume);
+      jsonWrite(configSetup, "vol", eff_volume);
+      jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
+      
+      /*
+      for (uint8_t i = 0; i < 8; i++)
+      {
+        mp3.write(cmdbuf[i]);
+        delay(3);
+      }
+      */
+      sendVolume(inputBuffer);
+
+    #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
+    #endif
+
+    #ifdef USE_BLYNK_PLUS
+        updateRemoteBlynkParams();
+    #endif
+    }
+    
+    else if (!strncmp_P(inputBuffer, PSTR("SO_ON"), 5))
+    {
+      eff_sound_on = eff_volume;
+      //modes[EFF_VOICE].Scale = 51;
+      sendVolume(inputBuffer);
+
+  #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
+  #endif
+  #ifdef USE_BLYNK_PLUS
+      updateRemoteBlynkParams();
+  #endif
+    }
+
+    else if (!strncmp_P(inputBuffer, PSTR("SO_OFF"), 6))
+    {
+      eff_sound_on = false;
+      //modes[EFF_VOICE].Scale = 1;
+      sendVolume(inputBuffer);
+
+  #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
+  #endif
+  #ifdef USE_BLYNK_PLUS
+      updateRemoteBlynkParams();
+  #endif
+    }    
+    #endif  //MP3_TX_PIN
+    
     else if (!strncmp_P(inputBuffer, PSTR("BRI"), 3))
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
@@ -354,8 +438,10 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
         jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
         jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
-        cycle_get();  // чтение выбранных эффектов
-
+        //cycle_get();  // запмсь выбранных эффектов
+        timeout_save_file_changes = millis();
+        bitSet (save_file_changes, 2);
+    
         #if (USE_MQTT)
         if (espMode == 1U)
         {
@@ -390,9 +476,6 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         }
         else
           showWarning(CRGB::Red, 2000U, 500U);                     // мигание красным цветом 2 секунды (ошибка)
-      //}
-      //else
-      //  showWarning(CRGB::Red, 2000U, 500U);                     // мигание красным цветом 2 секунды (ошибка)
     }
     #endif // OTA
 
@@ -860,6 +943,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
      jsonWrite(configSetup, "Power", ONflag);    
      }
      inputBuffer[0] = '\0';
+     //outputBuffer[0] = '\0';
+     generateOutput = false;
   	}
 #endif //USE_MULTIPLE_LAMPS_CONTROL
 //#ifdef USE_OLD_APP_FROM_KOTEYKA // (в версии 2.3... были кнопки, чтобы сохранить настройки эффектов из приложения в лампу)
@@ -946,7 +1031,10 @@ void sendCurrent(char *outputBuffer)
   time_t currentTicks = millis() / 1000UL;
   sprintf_P(outputBuffer, PSTR("%s %02u:%02u:%02u"), outputBuffer, hour(currentTicks), minute(currentTicks), second(currentTicks));
   #endif
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)Sound_Volum);
+  #ifdef MP3_TX_PIN
+  sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_sound_on);
+  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_volume);
+  #endif  //MP3_TX_PIN
 }
 
 void NEWsendCurrent(char *outputBuffer)
@@ -972,16 +1060,6 @@ void NEWsendCurrent(char *outputBuffer)
     FavoritesManager::rndCycle,
     random_on);
   
-  //#ifdef USE_NTP
-  //strcat_P(outputBuffer, PSTR(" 1"));
-  //#else
-  //strcat_P(outputBuffer, PSTR(" 0"));
-  //#endif
-
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)TimerManager::TimerRunning);
-  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)buttonEnabled);
-
-  //#ifdef USE_NTP
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
   char timeBuf[9];
   getFormattedTime(timeBuf);
@@ -990,6 +1068,11 @@ void NEWsendCurrent(char *outputBuffer)
   time_t currentTicks = millis() / 1000UL;
   sprintf_P(outputBuffer, PSTR("%s %02u:%02u:%02u"), outputBuffer, hour(currentTicks), minute(currentTicks), second(currentTicks));
   #endif
+  #ifdef MP3_TX_PIN
+  sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_sound_on);
+  //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_volume);
+  #endif  //MP3_TX_PIN
+  
 }
 
 void sendAlarms(char *outputBuffer)
@@ -1033,7 +1116,10 @@ void sendAlarms(char *outputBuffer)
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, dawnMode + 1);
   if (alarm_change)
 	{
-	  writeFile("alarm_config.json", configAlarm );
+	  //writeFile("alarm_config.json", configAlarm );
+    timeout_save_file_changes = millis();
+    bitSet (save_file_changes, 1);
+
 	#ifdef GENERAL_DEBUG
 		LOG.println ("\nНовые установки будильника сохранены в файл");
     	LOG.println(configAlarm);
@@ -1065,3 +1151,12 @@ String getValue(String data, char separator, int index)
   }
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
+
+#ifdef MP3_TX_PIN
+void sendVolume(char *outputBuffer)
+{
+  sprintf_P(outputBuffer, PSTR("VOL %u %u"),
+    eff_sound_on,
+    eff_volume);
+}
+#endif  //MP3_TX_PIN

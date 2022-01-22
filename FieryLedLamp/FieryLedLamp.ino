@@ -72,15 +72,11 @@
 #ifdef TM1637_USE
 #include "TM1637Display.h"
 #endif
-#ifdef TM1637_USE
-uint8_t DispBrightness = 1;          // +++ Яркость дисплея от 0 до 255(5 уровней яркости с шагом 51). 0 - дисплей погашен 
-bool dotFlag = false;                // +++ флаг: в часах рисуется двоеточие или нет
-uint32_t tmr_clock = 0;              // +++ таймер мигания разделителя часов на дисплее
-uint32_t tmr_blink = 0;              // +++ таймер плавного изменения яркости дисплея
-//bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
-TM1637Display display(CLK, DIO);     // +++ подключаем дисплей
-bool aDirection = false;             // +++ Направление изменения яркрсти
-#endif
+#ifdef MP3_TX_PIN
+#include <SoftwareSerial.h>                  // Подключаем библиотеку для работы с последовательным интерфейсом
+#include <DFRobotDFPlayerMini.h>             // Подключаем библиотеку для работы с плеером
+#endif  //MP3_TX_PIN
+
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
 CRGB leds[NUM_LEDS];
 //WiFiManager wifiManager;
@@ -185,10 +181,10 @@ uint8_t FavoritesManager::FavoriteModes[MODE_AMOUNT] = {0};
 uint32_t FavoritesManager::nextModeAt = 0UL;
 bool FavoritesManager::rndCycle = false;
 
-//bool CaptivePortalManager::captivePortalCalled = false;
-
-char TextTicker [80];
+char TextTicker [86];
 int Painting = 0; CRGB DriwingColor = CRGB(255, 255, 255);
+
+//..................... Переменные, добавленные с внедрением web интерфейса .............................................................................................
 
 uint8_t espMode ;
 uint8_t random_on;
@@ -200,11 +196,55 @@ bool connect = false;
 uint32_t lastResolveTryMoment = 0xFFFFFFFFUL;
 uint8_t ESP_CONN_TIMEOUT;
 uint8_t PRINT_TIME ;
+uint8_t day_night = false;     // если день - true, ночь - false
+uint8_t save_file_changes =0;
+uint32_t timeout_save_file_changes;
+bool first_entry = false;
+#define SAVE_FILE_DELAY_TIMEOUT  15000UL
+
 #ifdef USE_MULTIPLE_LAMPS_CONTROL
 char Host1[16], Host2[16], Host3[16];
 uint8_t ml1, ml2, ml3;
+//bool repeat_multiple_lamp_control = false;
 #endif //USE_MULTIPLE_LAMPS_CONTROL
 
+#ifdef MP3_TX_PIN
+uint8_t alarm_sound_on =false;       // Включить/выключить звук будильника
+uint8_t alarm_volume;                // Громкость будильника
+bool alarm_sound_flag =false;        // проигрывается ли сейчас будильник
+uint8_t dawnflag_sound = false;      // Звук не начал обслуживание рассвета. Если не true - звук обслуживает рассвет
+uint8_t tmp_fold;
+bool advert_flag = false;            // Озвучивается время
+bool advert_hour;                    // Щзвучиваются часы времени
+uint8_t day_advert_volume;           // Дневная Громкость озвучивания времени
+uint8_t night_advert_volume;          // Ночная Громкость озвучивания времени
+bool day_advert_sound_on;            // Вкл.Выкл озвучивания времени днём
+bool night_advert_sound_on;          // Вкл.Выкл озвучивания времени ночью
+bool mp3_player_connect = false; // Плеер не подключен. true - подключен.
+uint8_t mp3_folder_last=0;       // Предыдущая папка для воспроизведения
+bool mp3_play_now=false;         // Указывает, играет ли сейчас мелодия
+bool set_mp3_play_now=false;     // Указывает, надо ли играть сейчас мелодии
+//uint8_t eff_volume_tmp = 0;
+//uint8_t day_volum;
+//uint8_t night_volum;
+bool pause_on = true;                        // Озвучка эффектов на паузе. false - на паузе
+uint8_t eff_volume = 9;                       // громкость воспроизведения
+uint8_t eff_sound_on = 0;                        // звук включен - !0 (true), выключен - 0
+SoftwareSerial mp3(MP3_RX_PIN, MP3_TX_PIN);  // создаём объект mySoftwareSerial и указываем выводы, к которым подлючен плеер (RX, TX)
+DFRobotDFPlayerMini myDFPlayer;
+//uint32_t timerss = 0;
+//uint8_t cmdbuf[8] = {0x7E, 0xFF, 06, 0x06, 00, 00, 00, 0xEF};
+#endif  //MP3_TX_PIN
+
+#ifdef TM1637_USE
+uint8_t DispBrightness = 1;          // +++ Яркость дисплея от 0 до 255(5 уровней яркости с шагом 51). 0 - дисплей погашен 
+bool dotFlag = false;                // +++ флаг: в часах рисуется двоеточие или нет
+uint32_t tmr_clock = 0;              // +++ таймер мигания разделителя часов на дисплее
+uint32_t tmr_blink = 0;              // +++ таймер плавного изменения яркости дисплея
+//bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
+TM1637Display display(CLK, DIO);     // +++ подключаем дисплей
+bool aDirection = false;             // +++ Направление изменения яркрсти
+#endif  //TM1637_USE
 
 
 void setup()  //==================================================================  void setup()  =========================================================================
@@ -242,7 +282,7 @@ void setup()  //================================================================
   LOG.print(F("\nСтарт файловой системы\n"));
   FS_init();  //Запускаем файловую систему
   LOG.print(F("Чтение файла конфигурации\n"));
-  configSetup = readFile("config.json", 768);   
+  configSetup = readFile("config.json", 1024);   
   LOG.println(configSetup);
   //Настраиваем и запускаем SSDP интерфейс
   LOG.print(F("Старт SSDP\n"));
@@ -282,6 +322,16 @@ void setup()  //================================================================
   summerTime.offset = winterTime.offset + jsonReadtoInt(configSetup, "Summer_Time") *60;
   localTimeZone.setRules (summerTime, winterTime);
   #endif
+  #ifdef MP3_TX_PIN
+  eff_volume = jsonReadtoInt(configSetup, "vol");
+  eff_sound_on = (jsonReadtoInt(configSetup, "on_sound")==0)? 0 : eff_volume;
+  alarm_volume = jsonReadtoInt(configSetup, "alm_vol");
+  alarm_sound_on = jsonReadtoInt(configSetup, "on_alm_snd");
+  day_advert_sound_on = jsonReadtoInt(configSetup,"on_day_adv");
+  night_advert_sound_on = jsonReadtoInt(configSetup,"on_night_adv");
+  day_advert_volume = jsonReadtoInt(configSetup,"day_vol");
+  night_advert_volume = jsonReadtoInt(configSetup,"night_vol");
+  #endif //MP3_TX_PIN
 
 
   // TELNET
@@ -372,19 +422,29 @@ void setup()  //================================================================
   jsonWrite(configSetup, "br", modes[currentMode].Brightness);
   jsonWrite(configSetup, "sp", modes[currentMode].Speed);
   jsonWrite(configSetup, "sc", modes[currentMode].Scale); 
-  sendAlarms(inputBuffer);                                                 // Чтение настроек будильника при старте лампы
+  //sendAlarms(inputBuffer);                                                 // Чтение настроек будильника при старте лампы
+  first_entry = true;
+  handle_alarm ();
+  first_entry = false;
   jsonWrite(configSetup, "cycle_on", FavoritesManager::FavoritesRunning);  // чтение состояния настроек режима Цикл 
   jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
   jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
   jsonWrite(configSetup, "cycle_allwase", FavoritesManager::UseSavedFavoritesRunning);
   jsonWrite(configSetup, "tmr", 0);
   jsonWrite(configSetup, "button_on", buttonEnabled);
-  cycle_get();  // чтение выбранных эффектов
+  //cycle_get ();
+  first_entry = true;
+  handle_cycle_set();  // чтение выбранных эффектов
+  first_entry = false;
 #ifdef USE_MULTIPLE_LAMPS_CONTROL  
   multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
 #endif //USE_MULTIPLE_LAMPS_CONTROL
+//#ifdef MP3_TX_PIN
+//jsonWrite(configSetup, "vol", eff_volume);
+//jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
+//#endif //MP3_TX_PIN
   
-  #ifdef EFFECT_REESTR_LENGTH && GENERAL_DEBUG
+  #if defined EFFECT_REESTR_LENGTH && defined GENERAL_DEBUG
   LOG.print(F("\nДлинна 1й строки = "));
   LOG.println ( efList_1.length() );
   LOG.println ( efList_1 );
@@ -488,6 +548,11 @@ void setup()  //================================================================
   randomSeed(micros());
   changePower();
   loadingFlag = true;
+  
+  #ifdef MP3_TX_PIN
+   LOG.println ("Старт mp3 player");
+   mp3_setup();
+  #endif 
 
   //TextTicker = RUNNING_TEXT_DEFAULT;
   delay (100);
@@ -567,7 +632,7 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
   //HTTP.handleClient(); // Обработка запросов web страницы. 
   parseUDP();
   yield();
-#ifdef TM1637_USE
+  #ifdef TM1637_USE
     if (millis() - tmr_clock > 1000) {       // каждую секунду изменяем
       tmr_clock = millis();                  // обновляем значение счетчика
       dotFlag = !dotFlag;                    // инверсия флага
@@ -576,7 +641,12 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
     if (dawnFlag) {
     clockTicker_blink();
     }
-#endif
+  #endif  //TM1637_USE
+  #ifdef MP3_TX_PIN
+  if (mp3_player_connect) 
+    mp3_loop();
+  #endif
+
  if (Painting == 0) {
 
   effectsTick();
