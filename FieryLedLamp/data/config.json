@@ -36,5 +36,13 @@
 "cycle_allwase":0,
 "timer":15,
 "alt":0,
-"get_time":0
+"get_time":0,
+"vol":10,
+"on_sound":1,
+"on_day_adv":1,
+"day_vol":10,
+"on_night_adv":0,
+"night_vol":1,
+"on_alm_snd":1,
+"alm_vol":5
 }

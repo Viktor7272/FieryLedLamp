@@ -36,6 +36,45 @@ uint8_t minu;
 
 void timeTick()
 {
+    if (save_file_changes && millis() - timeout_save_file_changes >= SAVE_FILE_DELAY_TIMEOUT) {
+        //writeFile("config.json", configSetup );
+        //save_file_changes = 0;
+        switch (save_file_changes) {
+        case 1:
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 2:
+            save_alarms();
+            save_file_changes = 0;
+            break;
+        case 3:
+            save_alarms();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 4:
+            cycle_get();
+            save_file_changes = 0;
+            break;
+        case 5:
+            cycle_get();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 6:
+            cycle_get();
+            save_alarms();
+            save_file_changes = 0;
+            break;
+        case 7:
+            save_alarms();
+            cycle_get();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        }
+    }
   //if (espMode == 1U) // рассвет то должнен работать, если время лампа уже получила
   {
     if (timeTimer.isReady())

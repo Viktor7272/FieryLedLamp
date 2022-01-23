@@ -19,15 +19,24 @@ void buttonTick()
   // однократное нажатие
   if (clickCount == 1U)
   {
-    if (dawnFlag)
-    {
-      manualOff = true;
-      dawnFlag = false;
-      #ifdef TM1637_USE
-      clockTicker_blink();
-      #endif
-      FastLED.setBrightness(modes[currentMode].Brightness);
-      changePower();
+    if (dawnFlag) {
+        #ifdef MP3_TX_PIN
+        if (alarm_sound_flag) {
+           myDFPlayer.stop();
+           alarm_sound_flag = false;
+        }
+        else
+        #endif  //MP3_TX_PIN
+        {
+            manualOff = true;
+            dawnFlag = false;
+            #ifdef TM1637_USE
+            clockTicker_blink();
+            #endif
+            FastLED.setBrightness(modes[currentMode].Brightness);
+            changePower();
+       }
+       return;
     }
     else
     {
@@ -36,8 +45,15 @@ void buttonTick()
       changePower();
     }
     settChanged = true;
-    if (ONflag)   eepromTimeout = millis();
-    else    eepromTimeout = millis() + EEPROM_WRITE_DELAY;
+    save_file_changes = 7;
+    if (ONflag)  {
+        eepromTimeout = millis();
+        timeout_save_file_changes = millis();
+    }
+    else {
+        eepromTimeout = millis() - EEPROM_WRITE_DELAY;
+        timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
+    }
     loadingFlag = true;
 
     #if (USE_MQTT)
@@ -56,7 +72,23 @@ void buttonTick()
 
 
   // двухкратное нажатие
-  if (ONflag && clickCount == 2U)
+  if (clickCount == 2U)
+     #ifdef MP3_TX_PIN
+     if (dawnFlag && alarm_sound_flag) {
+        myDFPlayer.stop();
+        alarm_sound_flag = false;
+        manualOff = true;
+        dawnFlag = false;
+        #ifdef TM1637_USE
+        clockTicker_blink();
+        #endif
+        FastLED.setBrightness(modes[currentMode].Brightness);
+        changePower();
+       }
+       else
+       #endif  //MP3_TX_PIN
+      
+  if (ONflag)    
   {
     if (Favorit_only)
 	{
@@ -236,6 +268,34 @@ void buttonTick()
     ESP.restart();
   }
 
+  #ifdef MP3_TX_PIN
+  // Восьмикратное нажатие
+  if (clickCount == 8U)  {                // Вкл / Откл звука
+    if (mp3_player_connect) {
+      if (eff_sound_on) {
+        eff_sound_on = 0;
+        showWarning(CRGB::Yellow, 1000, 250U);                    // мигание желтым цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("Звук выключен"));
+        #endif
+      }
+      else {
+        eff_sound_on = eff_volume;
+        showWarning(CRGB::Blue, 1000, 250U);                    // мигание синим цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("Звук включен"));
+        #endif
+      }
+    }
+    else  {
+        showWarning(CRGB::Red, 1000, 250U);                    // мигание красным цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("mp3 player не подключен"));
+        #endif
+    }
+    jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
+  }
+  #endif  //MP3_TX_PIN
 
   // кнопка только начала удерживаться
   //if (ONflag && touch.isHolded())

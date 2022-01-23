@@ -3690,8 +3690,9 @@ void text_running() {
 #endif //#if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
 
   while (!fillString(TextTicker, CHSV(modes[EFF_TEXT].Scale * 2.55, 255U, 255U), true) && currentMode == EFF_TEXT) {
+    HTTP.handleClient();
     parseUDP();
-    delay (5);
+    delay (1);
     HTTP.handleClient();
 #ifdef ESP_USE_BUTTON
     //if (buttonEnabled) в процедуре ведь есть эта проверка
@@ -7987,7 +7988,7 @@ void fairyRoutine() {
     hue = random8();//boids[0].colorIndex =
 #ifdef FAIRY_BEHAVIOR
     deltaHue2 = 1U;
-#endif;
+#endif
   }
   step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
 

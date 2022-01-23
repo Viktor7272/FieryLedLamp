@@ -161,7 +161,7 @@ class EepromManager
     
     static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimeout, bool* onFlag, uint8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
     {
-      if (*settChanged && millis() - *eepromTimeout > EEPROM_WRITE_DELAY)
+      if (*settChanged && millis() - *eepromTimeout >= EEPROM_WRITE_DELAY)
       {
         *settChanged = false;
         *eepromTimeout = millis();
