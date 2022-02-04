@@ -11,6 +11,8 @@
     uint8_t shuffleFavoriteModes[MODE_AMOUNT];
     uint8_t shuffleCurrentIndex = MODE_AMOUNT; // начальное значение увеличивается на 1 и затем сравнивается с MODE_AMOUNT, чтобы создать первоначальное перемешивание режимов
 #endif
+bool repeat_multiple_lamp_control = false;
+
 
 ModeType modes[MODE_AMOUNT];
 
@@ -23,6 +25,7 @@ class FavoritesManager
     static uint8_t UseSavedFavoritesRunning;                // флаг, определяющий, нужно ли использовать сохранённое значение FavoritesRunning при перезапуске; еслин нет, "избранное" будет выключено при старте
     static uint8_t FavoriteModes[MODE_AMOUNT];              // массив, каждый элемент которого соответствует флагу "эффект №... добавлен в избранные"
     static uint32_t nextModeAt;                             // ближайшее время переключения на следующий избранный эффект (millis())
+	  static bool rndCycle;                                // Перемешивать цикл или нет
 
     static void SetStatus(char* statusText)                 // помещает в statusText состояние режима работы избранных эффектов
     {
@@ -112,10 +115,16 @@ class FavoritesManager
       if (millis() >= nextModeAt)
       {
         *currentMode = getNextFavoriteMode(currentMode);
-		jsonWrite(configSetup, "eff_sel", *currentMode);
-		jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
-		jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
-		jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
+        
+		//jsonWrite(configSetup, "eff_sel", *currentMode);
+		//jsonWrite(configSetup, "br", modes[*currentMode].Brightness);
+		//jsonWrite(configSetup, "sp", modes[*currentMode].Speed);
+		//jsonWrite(configSetup, "sc", modes[*currentMode].Scale);
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        //multiple_lamp_control ();
+        repeat_multiple_lamp_control = true;
+        #endif //USE_MULTIPLE_LAMPS_CONTROL
+        
         *loadingFlag = true;
         nextModeAt = getNextTime();
 
@@ -276,14 +285,14 @@ class FavoritesManager
     }
 
 #ifdef USE_SHUFFLE_FAVORITES
-    static uint8_t getNextFavoriteMode(uint8_t* currentMode)  // возвращает следующий (случайный) включенный в избранные эффект
-    {
+    static uint8_t getNextFavoriteMode(uint8_t* currentMode)   {  // возвращает следующий (случайный) включенный в избранные эффект
       uint8_t result;
       uint8_t count = MODE_AMOUNT;// считаем в этом счётчике, есть ли вообще в наличии избранные режимы. хотя бы два
       do {
         shuffleCurrentIndex++;
         if (shuffleCurrentIndex >= MODE_AMOUNT){        // если достигнут предел количества режимов
           count = MODE_AMOUNT;// считаем в этом счётчике, есть ли вообще в наличии избранные режимы, кроме одного
+         if (rndCycle)   {
           for (uint8_t i = 0; i < MODE_AMOUNT; i++){    // перемешиваем режимы
             //swap(shuffleFavoriteModes[i], shuffleFavoriteModes[random8(MODE_AMOUNT)]); одной строчкой не получилось поменять местами
             uint8_t j = random8(MODE_AMOUNT);
@@ -293,6 +302,14 @@ class FavoritesManager
             if (FavoriteModes[i] == 0) // заодно считаем, вдруг нет избранных режимов, кроме одного
               count--;
           }
+         } 
+        else   {
+          for (uint8_t i = 0; i < MODE_AMOUNT; i++)   {     //расставляем очередь по порядку, начиная от текущего эффекта
+          shuffleFavoriteModes[i] = (*currentMode + i + 1U) % MODE_AMOUNT;
+          if (FavoriteModes[i] == 0) // заодно считаем, вдруг нет избранных режимов, кроме одного
+            count--;
+          }
+        }
           shuffleCurrentIndex = 0;
         }
       } while ((FavoriteModes[shuffleFavoriteModes[shuffleCurrentIndex]] == 0U || shuffleFavoriteModes[shuffleCurrentIndex] == *currentMode) && count > 1U);
@@ -315,7 +332,8 @@ class FavoritesManager
             result = i < MODE_AMOUNT ? i : i - MODE_AMOUNT;
             break;
           }
-        }        
+        }
+		if (!rndCycle) break;
       }
       return result;
     }

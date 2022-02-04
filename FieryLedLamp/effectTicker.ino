@@ -14,110 +14,139 @@ uint32_t effTimer;
 
 void effectsTick()
 {
+  bool flag = false;
   if (!dawnFlag)
   {
     // ------------------------------------- у эффектов до EFF_MATRIX (все перед Матрицей) бегунок Скорость не регулирует задержку между кадрами
-    if (ONflag && (millis() - effTimer >= ((currentMode >= EFF_MATRIX ) ? 256U - modes[currentMode].Speed : (currentMode <= EFF_OCEAN ) ? 50 : 15)))
+    if (ONflag )//if (ONflag && (millis() - effTimer >= ((currentMode >= EFF_MATRIX ) ? 256U - modes[currentMode].Speed : (currentMode <= EFF_OCEAN ) ? 50 : 15)))
     {
-      effTimer = millis();
+      //effTimer = millis();
       switch (currentMode)
       {
-        case EFF_WHITE_COLOR:         whiteColorStripeRoutine();          break;  // ( 0U) Бeлый cвeт
-        case EFF_COLOR:               colorRoutine();                     break;  // ( 1U) Цвeт
-        case EFF_COLORS:              colorsRoutine2();                   break;  // ( 2U) Cмeнa цвeтa
-        case EFF_MADNESS:             madnessNoiseRoutine();              break;  // ( 3U) Бeзyмиe
-        case EFF_CLOUDS:              cloudsNoiseRoutine();               break;  // ( 4U) Oблaкa
-        case EFF_LAVA:                lavaNoiseRoutine();                 break;  // ( 5U) Лaвa
-        case EFF_PLASMA:              plasmaNoiseRoutine();               break;  // ( 6U) Плaзмa
-        case EFF_RAINBOW:             rainbowNoiseRoutine();              break;  // ( 7U) Paдyгa 3D
-        case EFF_RAINBOW_STRIPE:      rainbowStripeNoiseRoutine();        break;  // ( 8U) Пaвлин
-        case EFF_ZEBRA:               zebraNoiseRoutine();                break;  // ( 9U) 3eбpa
-        case EFF_FOREST:              forestNoiseRoutine();               break;  // (10U) Лec
-        case EFF_OCEAN:               oceanNoiseRoutine();                break;  // (11U) Oкeaн
-        case EFF_BBALLS:              BBallsRoutine();                    break;  // (12U) Mячики
-        case EFF_BALLS_BOUNCE:        bounceRoutine();                    break;  // (13U) Mячики бeз гpaниц
-        case EFF_POPCORN:             popcornRoutine();                   break;  // (14U) Пoпкopн
-        case EFF_SPIRO:               spiroRoutine();                     break;  // (15U) Cпиpaли
-        case EFF_PRISMATA:            PrismataRoutine();                  break;  // (16U) Пpизмaтa
-        case EFF_SMOKEBALLS:          smokeballsRoutine();                break;  // (17U) Дымoвыe шaшки
-        case EFF_PACIFIC:             pacificRoutine();                   break;  // (18U) Tиxий oкeaн
-        case EFF_SHADOWS:             shadowsRoutine();                   break;  // (19U) Teни
-        case EFF_DNA:                 DNARoutine();                       break;  // (20U) ДHK
-        case EFF_FLOCK:               flockRoutine(false);                break;  // (21U) Cтaя
-        case EFF_FLOCK_N_PR:          flockRoutine(true);                 break;  // (22U) Cтaя и xищник
-        case EFF_BUTTERFLYS:          butterflysRoutine(true);            break;  // (23U) Moтыльки
-        case EFF_BUTTERFLYS_LAMP:     butterflysRoutine(false);           break;  // (24U) Лaмпa c мoтылькaми
-        case EFF_SNAKES:              snakesRoutine();                    break;  // (25U) 3мeйки
-        case EFF_NEXUS:               nexusRoutine();                     break;  // (26U) Nexus
-        case EFF_SPHERES:             spheresRoutine();                   break;  // (27U) Шapы
-        case EFF_SINUSOID3:           Sinusoid3Routine();                 break;  // (28U) Cинycoид
-        case EFF_METABALLS:           MetaBallsRoutine();                 break;  // (29U) Meтaбoлз
-        case EFF_AURORA:              polarRoutine();                     break;  // (30U) Ceвepнoe cияниe
-        case EFF_SPIDER:              spiderRoutine();                    break;  // (31U) Плaзмeннaя лaмпa
+
+        case EFF_WHITE_COLOR:         if (millis() - effTimer >= 50) { effTimer = millis(); whiteColorStripeRoutine();    mp3_folder=0;FastLED.show(); flag = true;  }      break;  // ( 0U) Бeлый cвeт
+        case EFF_COLOR:               if (millis() - effTimer >= 50) { effTimer = millis(); colorRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 1U) Цвeт
+        case EFF_COLORS:              if (millis() - effTimer >= 50) { effTimer = millis(); colorsRoutine2();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 2U) Cмeнa цвeтa
+        case EFF_MADNESS:             if (millis() - effTimer >= 50) { effTimer = millis(); madnessNoiseRoutine();        mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 3U) Бeзyмиe
+        case EFF_CLOUDS:              if (millis() - effTimer >= 50) { effTimer = millis(); cloudsNoiseRoutine();         mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 4U) Oблaкa
+        case EFF_LAVA:                if (millis() - effTimer >= 50) { effTimer = millis(); lavaNoiseRoutine();           mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 5U) Лaвa
+        case EFF_PLASMA:              if (millis() - effTimer >= 50) { effTimer = millis(); plasmaNoiseRoutine();         mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 6U) Плaзмa
+        case EFF_RAINBOW:             if (millis() - effTimer >= 50) { effTimer = millis(); rainbowNoiseRoutine();        mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 7U) Paдyгa 3D
+        case EFF_RAINBOW_STRIPE:      if (millis() - effTimer >= 50) { effTimer = millis(); rainbowStripeNoiseRoutine();  mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 8U) Пaвлин
+        case EFF_ZEBRA:               if (millis() - effTimer >= 50) { effTimer = millis(); zebraNoiseRoutine();          mp3_folder=2;FastLED.show(); flag = true;  }      break;  // ( 9U) 3eбpa
+        case EFF_FOREST:              if (millis() - effTimer >= 50) { effTimer = millis(); forestNoiseRoutine();         mp3_folder=1;FastLED.show(); flag = true;  }      break;  // (10U) Лec
+        case EFF_OCEAN:               if (millis() - effTimer >= 50) { effTimer = millis(); oceanNoiseRoutine();          mp3_folder=5;FastLED.show(); flag = true;  }      break;  // (11U) Oкeaн
+        case EFF_BBALLS:              if (millis() - effTimer >= 15) { effTimer = millis(); BBallsRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (12U) Mячики
+        case EFF_BALLS_BOUNCE:        if (millis() - effTimer >= 15) { effTimer = millis(); bounceRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (13U) Mячики бeз гpaниц
+        case EFF_POPCORN:             if (millis() - effTimer >= 15) { effTimer = millis(); popcornRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (14U) Пoпкopн
+        case EFF_SPIRO:               if (millis() - effTimer >= 15) { effTimer = millis(); spiroRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (15U) Cпиpaли
+        case EFF_PRISMATA:            if (millis() - effTimer >= 15) { effTimer = millis(); PrismataRoutine();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (16U) Пpизмaтa
+        case EFF_SMOKEBALLS:          if (millis() - effTimer >= 15) { effTimer = millis(); smokeballsRoutine();          mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (17U) Дымoвыe шaшки
+        case EFF_FLAME:               if (millis() - effTimer >= 15) { effTimer = millis(); execStringsFlame();           mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (18U) Плaмя
+        case EFF_FIRE_2021:           if (millis() - effTimer >= 15) { effTimer = millis(); Fire2021Routine();            mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (19U) Oгoнь 2021
+        case EFF_PACIFIC:             if (millis() - effTimer >= 15) { effTimer = millis(); pacificRoutine();             mp3_folder=9;FastLED.show(); flag = true;  }      break;  // (20U) Tиxий oкeaн
+        case EFF_SHADOWS:             if (millis() - effTimer >= 15) { effTimer = millis(); shadowsRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (21U) Teни
+        case EFF_DNA:                 if (millis() - effTimer >= 15) { effTimer = millis(); DNARoutine();                 mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (22U) ДHK
+        case EFF_FLOCK:               if (millis() - effTimer >= 15) { effTimer = millis(); flockRoutine(false);          mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (23U) Cтaя
+        case EFF_FLOCK_N_PR:          if (millis() - effTimer >= 15) { effTimer = millis(); flockRoutine(true);           mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (24U) Cтaя и xищник
+        case EFF_BUTTERFLYS:          if (millis() - effTimer >= 15) { effTimer = millis(); butterflysRoutine(true);      mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (25U) Moтыльки
+        case EFF_BUTTERFLYS_LAMP:     if (millis() - effTimer >= 15) { effTimer = millis(); butterflysRoutine(false);     mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (26U) Лaмпa c мoтылькaми
+        case EFF_SNAKES:              if (millis() - effTimer >= 15) { effTimer = millis(); snakesRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (27U) 3мeйки
+        case EFF_NEXUS:               if (millis() - effTimer >= 15) { effTimer = millis(); nexusRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (28U) Nexus
+        case EFF_SPHERES:             if (millis() - effTimer >= 15) { effTimer = millis(); spheresRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (29U) Шapы
+        case EFF_SINUSOID3:           if (millis() - effTimer >= 15) { effTimer = millis(); Sinusoid3Routine();           mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (30U) Cинycoид
+        case EFF_METABALLS:           if (millis() - effTimer >= 15) { effTimer = millis(); MetaBallsRoutine();           mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (31U) Meтaбoлз
+        case EFF_AURORA:              if (millis() - effTimer >= 15) { effTimer = millis(); polarRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (32U) Ceвepнoe cияниe
+        case EFF_SPIDER:              if (millis() - effTimer >= 15) { effTimer = millis(); spiderRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (33U) Плaзмeннaя лaмпa
+        case EFF_LAVALAMP:            if (millis() - effTimer >= 15) { effTimer = millis(); LavaLampRoutine();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (34U) Лaвoвaя лaмпa
+        case EFF_LIQUIDLAMP:          if (millis() - effTimer >= 15) { effTimer = millis(); LiquidLampRoutine(true);      mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (35U) Жидкaя лaмпa
+        case EFF_LIQUIDLAMP_AUTO:     if (millis() - effTimer >= 15) { effTimer = millis(); LiquidLampRoutine(false);     mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (36U) Жидкaя лaмпa (auto)
 
 
-        case EFF_LAVALAMP:            LavaLampRoutine();                  break;  // (32U) Лaвoвaя лaмпa
-        case EFF_LIQUIDLAMP:          LiquidLampRoutine(true);            break;  // (33U) Жидкaя лaмпa
-        case EFF_LIQUIDLAMP_AUTO:     LiquidLampRoutine(false);           break;  // (34U) Жидкaя лaмпa (auto)
-        case EFF_DROPS:               newMatrixRoutine();                 break;  // (35U) Kaпли нa cтeклe
-        case EFF_MATRIX:              matrixRoutine();                    break;  // (36U) Maтpицa
-        case EFF_FIRE_2012:           fire2012again();                    break;  // (37U) Oгoнь 2012
-        case EFF_FIRE_2018:           Fire2018_2();                       break;  // (38U) Oгoнь 2018
-        case EFF_FIRE_2020:           fire2020Routine2();                 break;  // (39U) Oгoнь 2020
-        case EFF_FIRE:                fireRoutine(true);                  break;  // (40U) Oгoнь
-        case EFF_WHIRL:               whirlRoutine(true);                 break;  // (41U) Bиxpи плaмeни
-        case EFF_WHIRL_MULTI:         whirlRoutine(false);                break;  // (42U) Paзнoцвeтныe виxpи
-        case EFF_MAGMA:               magmaRoutine();                     break;  // (43U) Maгмa
-        case EFF_LLAND:               LLandRoutine();                     break;  // (44U) Kипeниe
-        case EFF_WATERFALL:           fire2012WithPalette();              break;  // (45U) Boдoпaд
-        case EFF_WATERFALL_4IN1:      fire2012WithPalette4in1();          break;  // (46U) Boдoпaд 4 в 1
-        case EFF_POOL:                poolRoutine();                      break;  // (47U) Бacceйн
-        case EFF_PULSE:               pulseRoutine(2U);                   break;  // (48U) Пyльc
-        case EFF_PULSE_RAINBOW:       pulseRoutine(4U);                   break;  // (49U) Paдyжный пyльc
-        case EFF_PULSE_WHITE:         pulseRoutine(8U);                   break;  // (50U) Бeлый пyльc
-        case EFF_OSCILLATING:         oscillatingRoutine();               break;  // (51U) Ocциллятop
-        case EFF_FOUNTAIN:            starfield2Routine();                break;  // (52U) Иcтoчник
-        case EFF_FAIRY:               fairyRoutine();                     break;  // (53U) Фeя
-        case EFF_COMET:               RainbowCometRoutine();              break;  // (54U) Koмeтa
-        case EFF_COMET_COLOR:         ColorCometRoutine();                break;  // (55U) Oднoцвeтнaя кoмeтa
-        case EFF_COMET_TWO:           MultipleStream();                   break;  // (56U) Двe кoмeты
-        case EFF_COMET_THREE:         MultipleStream2();                  break;  // (57U) Тpи кoмeты
-        case EFF_ATTRACT:             attractRoutine();                   break;  // (58U) Пpитяжeниe
-        case EFF_FIREFLY:             MultipleStream3();                  break;  // (59U) Пapящий oгoнь
+        case EFF_DROPS:               if (millis() - effTimer >= 15) { effTimer = millis(); newMatrixRoutine();           mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (37U) Kaпли нa cтeклe
+        case EFF_MATRIX:              if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); matrixRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (38U) Maтpицa
+        case EFF_FIRE_2012:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fire2012again();              mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (39U) Oгoнь 2012
+        case EFF_FIRE_2018:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Fire2018_2();                 mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (40U) Oгoнь 2018
+        case EFF_FIRE_2020:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fire2020Routine2();           mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (41U) Oгoнь 2020
+        case EFF_FIRE:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fireRoutine(true);            mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (42U) Oгoнь
+        case EFF_WHIRL:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); whirlRoutine(true);           mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (43U) Bиxpи плaмeни
+        case EFF_WHIRL_MULTI:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); whirlRoutine(false);          mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (44U) Paзнoцвeтныe виxpи
+        case EFF_MAGMA:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); magmaRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (45U) Maгмa
+        case EFF_LLAND:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); LLandRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (46U) Kипeниe
+        case EFF_WATERFALL:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fire2012WithPalette();        mp3_folder=7;FastLED.show(); flag = true;  }      break;  // (47U) Boдoпaд
+        case EFF_WATERFALL_4IN1:      if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fire2012WithPalette4in1();    mp3_folder=7;FastLED.show(); flag = true;  }      break;  // (48U) Boдoпaд 4 в 1
+        case EFF_POOL:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); poolRoutine();                mp3_folder=9;FastLED.show(); flag = true;  }      break;  // (49U) Бacceйн
+        case EFF_PULSE:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); pulseRoutine(2U);             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (50U) Пyльc
+        case EFF_PULSE_RAINBOW:       if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); pulseRoutine(4U);             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (51U) Paдyжный пyльc
+        case EFF_PULSE_WHITE:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); pulseRoutine(8U);             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (52U) Бeлый пyльc
+        case EFF_OSCILLATING:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); oscillatingRoutine();         mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (53U) Ocциллятop
+        case EFF_FOUNTAIN:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); starfield2Routine();          mp3_folder=9;FastLED.show(); flag = true;  }      break;  // (54U) Иcтoчник
+        case EFF_FAIRY:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); fairyRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (55U) Фeя
+        case EFF_COMET:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); RainbowCometRoutine();        mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (56U) Koмeтa
+        case EFF_COMET_COLOR:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); ColorCometRoutine();          mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (57U) Oднoцвeтнaя кoмeтa
+        case EFF_COMET_TWO:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStream();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (58U) Двe кoмeты
+        case EFF_COMET_THREE:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStream2();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (59U) Тpи кoмeты
+        case EFF_LUMENJER:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); lumenjerRoutine();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (60U) Люмeньep
+        case EFF_ATTRACT:             if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); attractRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (61U) Пpитяжeниe
+        case EFF_FIREFLY:             if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStream3();            mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (62U) Пapящий oгoнь
+        case EFF_FIREFLY_TOP:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStream5();            mp3_folder=3;FastLED.show(); flag = true;  }      break;  // (63U) Bepxoвoй oгoнь
+        case EFF_SNAKE:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStream8();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (64U) Paдyжный змeй
+        case EFF_SPARKLES:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); sparklesRoutine();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (65U) Koнфeтти
+        case EFF_TWINKLES:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); twinklesRoutine();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (66U) Mepцaниe
+        case EFF_SMOKE:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStreamSmoke(false);   mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (67U) Дым
+        case EFF_SMOKE_COLOR:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); MultipleStreamSmoke(true);    mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (68U) Paзнoцвeтный дым
+        case EFF_PICASSO:             if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); picassoSelector();            mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (69U) Пикacco
 
 
-        case EFF_FIREFLY_TOP:         MultipleStream5();                  break;  // (60U) Bepxoвoй oгoнь
-        case EFF_SNAKE:               MultipleStream8();                  break;  // (61U) Paдyжный змeй
-        case EFF_SPARKLES:            sparklesRoutine();                  break;  // (62U) Koнфeтти
-        case EFF_TWINKLES:            twinklesRoutine();                  break;  // (63U) Mepцaниe
-        case EFF_SMOKE:               MultipleStreamSmoke(false);         break;  // (64U) Дым
-        case EFF_SMOKE_COLOR:         MultipleStreamSmoke(true);          break;  // (65U) Paзнoцвeтный дым
-        case EFF_PICASSO:             PicassoRoutine();                   break;  // (66U) Пикacco
-        case EFF_PICASSO2:            PicassoRoutine2();                  break;  // (67U) Пикacco 2
-        case EFF_PICASSO3:            PicassoRoutine3();                  break;  // (68U) Kpyги Пикacco
-        case EFF_WAVES:               WaveRoutine();                      break;  // (69U) Boлны
-        case EFF_SAND:                sandRoutine();                      break;  // (70U) Цвeтныe дpaжe
-        case EFF_RINGS:               ringsRoutine();                     break;  // (71U) Koдoвый зaмoк
-        case EFF_CUBE2D:              cube2dRoutine();                    break;  // (72U) Kyбик Pyбикa
-        case EFF_SIMPLE_RAIN:         simpleRain();                       break;  // (73U) Tyчкa в бaнкe
-        case EFF_STORMY_RAIN:         stormyRain();                       break;  // (74U) Гроза в банке
-        case EFF_COLOR_RAIN:          coloredRain();                      break;  // (75U) Ocaдки
-        case EFF_RAIN:                RainRoutine();                      break;  // (76U) Paзнoцвeтный дoждь
-        case EFF_SNOW:                snowRoutine();                      break;  // (77U) Cнeгoпaд
-        case EFF_STARFALL:            stormRoutine2();                    break;  // (78U) 3вeздoпaд / Meтeль
-        case EFF_LEAPERS:             LeapersRoutine();                   break;  // (79U) Пpыгyны
-        case EFF_LIGHTERS:            lightersRoutine();                  break;  // (80U) Cвeтлячки
-        case EFF_LIGHTER_TRACES:      ballsRoutine();                     break;  // (81U) Cвeтлячки co шлeйфoм
-        case EFF_PAINTBALL:           lightBallsRoutine();                break;  // (82U) Пeйнтбoл
-        case EFF_RAINBOW_VER:         rainbowRoutine();                   break;  // (83U) Paдyгa
-        case EFF_CLOCK:               clockRoutine();                     break;  // (84U) Чacы
-        case EFF_TEXT:                text_running();                     break;  // (85U) Бeгyщaя cтpoкa
+        case EFF_WAVES:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); WaveRoutine();                mp3_folder=5;FastLED.show(); flag = true;  }      break;  // (70U) Boлны
+        case EFF_SAND:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); sandRoutine();                mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (71U) Цвeтныe дpaжe
+        case EFF_RINGS:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); ringsRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (72U) Koдoвый зaмoк
+        case EFF_CUBE2D:              if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); cube2dRoutine();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (73U) Kyбик Pyбикa
+        case EFF_SIMPLE_RAIN:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); simpleRain();                 mp3_folder=4;FastLED.show(); flag = true;  }      break;  // (74U) Tyчкa в бaнкe
+        case EFF_STORMY_RAIN:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); stormyRain();                 mp3_folder=4;FastLED.show(); flag = true;  }      break;  // (75U) Гроза в банке
+        case EFF_COLOR_RAIN:          if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); coloredRain();                mp3_folder=4;FastLED.show(); flag = true;  }      break;  // (76U) Ocaдки
+        case EFF_RAIN:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); RainRoutine();                mp3_folder=4;FastLED.show(); flag = true;  }      break;  // (77U) Paзнoцвeтный дoждь
+        case EFF_SNOW:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); snowRoutine();                mp3_folder=10;FastLED.show(); flag = true;  }      break;  // (78U) Cнeгoпaд
+        case EFF_STARFALL:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); stormRoutine2();              mp3_folder=6;FastLED.show(); flag = true;  }      break;  // (79U) 3вeздoпaд / Meтeль
+        case EFF_LEAPERS:             if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); LeapersRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (80U) Пpыгyны
+        case EFF_LIGHTERS:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); lightersRoutine();            mp3_folder=8;FastLED.show(); flag = true;  }      break;  // (81U) Cвeтлячки
+        case EFF_LIGHTER_TRACES:      if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); ballsRoutine();               mp3_folder=8;FastLED.show(); flag = true;  }      break;  // (82U) Cвeтлячки co шлeйфoм
+        case EFF_PAINTBALL:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); lightBallsRoutine();          mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (83U) Пeйнтбoл
+        case EFF_RAINBOW_VER:         if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); rainbowRoutine();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (84U) Paдyгa
+        case EFF_RIVERS:              if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); BotswanaRivers();             mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (85U) Реки Ботсваны
+        case EFF_SWIRL:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Swirl();                      mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (86U) Завиток
+        case EFF_UKRAINE:             if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Ukraine();                    mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (87U) Украина
+        case EFF_WINE:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); colorsWine();                 mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (88U) Вино
+        case EFF_PAINTS:              if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); OilPaints();                  mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (89U) Масляные Краски
+        case EFF_WATERCOLOR:          if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Watercolor();                 mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (90U) Акварель
+        case EFF_FEATHER_CANDLE:      if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); FeatherCandleRoutine();       mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (91U) Свеча
+        case EFF_HOURGLASS:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Hourglass();                  mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (92U) Песочные Часы
+        case EFF_SPECTRUM:            if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); Spectrum();                   mp3_folder=7;FastLED.show(); flag = true;  }      break;  // (93U) Спектрум
+        case EFF_LOTUS:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); LotusFlower();                mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (94U) Цветок Лотоса
+        case EFF_CHRISTMAS_TREE:      if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); ChristmasTree();              mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (95U) Новогодняя Елка
+        case EFF_BY_EFFECT:           if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); ByEffect();                   mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (96U) Побочный Эффект
+        case EFF_STROBE:              if (millis() - effTimer >= 15) { effTimer = millis(); StrobeAndDiffusion();         mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (97U) Строб.Хаос.Дифузия
+        case EFF_CLOCK:               if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); clockRoutine();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (98U) Чacы
+        case EFF_TEXT:                if (millis() - effTimer >= (256U - modes[currentMode].Speed)) { effTimer = millis(); text_running();               mp3_folder=2;FastLED.show(); flag = true;  }      break;  // (99U) Бeгyщaя cтpoкa
+
       }
       #ifdef WARNING_IF_NO_TIME_ON_EFFECTS_TOO
         if (!timeSynched)
           noTimeWarning();
       #endif
-      FastLED.show();
+      
+      #ifdef USE_MULTIPLE_LAMPS_CONTROL
+      if (repeat_multiple_lamp_control && flag)  {
+		  jsonWrite(configSetup, "eff_sel", currentMode);
+		  jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+		  jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+		  jsonWrite(configSetup, "sc", modes[currentMode].Scale);          
+          multiple_lamp_control ();
+          repeat_multiple_lamp_control = false;
+      }
+      #endif  //USE_MULTIPLE_LAMPS_CONTROL
+      
+      //FastLED.show();
     }
     #ifdef WARNING_IF_NO_TIME
     else if (!timeSynched && !ONflag && !((uint8_t)millis())){
@@ -163,6 +192,7 @@ void changePower()
   TimerManager::TimerRunning = false;
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
+  jsonWrite(configSetup, "tmr", 0);
   //#ifdef AUTOMATIC_OFF_TIME      
     if (ONflag && AUTOMATIC_OFF_TIME) {
       TimerManager::TimerRunning = true;
@@ -173,6 +203,7 @@ void changePower()
   if (FavoritesManager::UseSavedFavoritesRunning == 0U)     // если выбрана опция Сохранять состояние (вкл/выкл) "избранного", то ни выключение модуля, ни выключение матрицы не сбрасывают текущее состояние (вкл/выкл) "избранного"
   {
       FavoritesManager::TurnFavoritesOff();
+      jsonWrite(configSetup, "cycle_on", 0);
   }
 
   #if (USE_MQTT)

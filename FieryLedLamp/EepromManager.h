@@ -81,7 +81,7 @@
                                                             // общий размер используемой EEPROM памяти (сумма всех хранимых настроек + 1 байт) 
 #define EEPROM_TOTAL_BYTES_USED              (EEPROM_FAVORITES_START_ADDRESS+MODE_AMOUNT+7)       
 
-#define EEPROM_FIRST_RUN_MARK                (24U)          // число-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
+#define EEPROM_FIRST_RUN_MARK                (MODE_AMOUNT)          // число-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
 #define EEPROM_WRITE_DELAY                   (30000UL)      // отсрочка записи в EEPROM после последнего изменения хранимых настроек, позволяет уменьшить количество операций записи в EEPROM
 
 class EepromManager
@@ -161,18 +161,21 @@ class EepromManager
     
     static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimeout, bool* onFlag, uint8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
     {
-      if (*settChanged && millis() - *eepromTimeout > EEPROM_WRITE_DELAY)
+      if (*settChanged && millis() - *eepromTimeout >= EEPROM_WRITE_DELAY)
       {
         *settChanged = false;
         *eepromTimeout = millis();
-        SaveOnFlag(onFlag);
-        SaveModesSettings(currentMode, modes);
-        if (EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS) != *currentMode)
-        {
-          EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, *currentMode);
-        }
-        saveFavoritesSettings();
-        EEPROM.commit();
+        //SaveOnFlag(onFlag);
+        #ifndef DONT_TURN_ON_AFTER_SHUTDOWN
+        EEPROM.write(EEPROM_LAMP_ON_ADDRESS, *onFlag);
+        #endif      
+        //SaveModesSettings(currentMode, modes);
+        for (uint8_t i = 0; i < MODE_AMOUNT; i++)
+          EEPROM.put(EEPROM_MODES_START_ADDRESS + EEPROM_MODE_STRUCT_SIZE * i, modes[i]);
+       
+        EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, *currentMode);
+        saveFavoritesSettings(); // там уже есть EEPROM.commit();
+        //EEPROM.commit();
       }
     }
 

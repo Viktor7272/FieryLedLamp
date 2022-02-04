@@ -113,6 +113,8 @@ void handleFileCreate() {
 
 }
 
+
+
 void handleFileList() {
   if (!HTTP.hasArg("dir")) {
     HTTP.send(500, "text/plain", "BAD ARGS");
@@ -125,18 +127,24 @@ void handleFileList() {
   while (dir.next()) {
     File entry = dir.openFile("r");
     if (output != "[") output += ',';
+#if defined (USE_LittleFS)
+    bool isDir = entry.isDirectory();
+#else
     bool isDir = false;
-    output += "{\"type\":\"";
-    output += (isDir) ? "dir" : "file";
-    output += "\",\"name\":\"";
-    #if defined (USE_LittleFS)
-      output += String(entry.name()).substring(0);
-    #else
-      output += String(entry.name()).substring(1);
-    #endif
+#endif
+    output += F("{\"type\":\"");
+    output += (isDir) ? F("dir") : F("file");
+    output += F("\",\"name\":\"");
+#if defined (USE_LittleFS)
+    output += String(entry.name()).substring(0);
+#else
+    output += String(entry.name()).substring(1);
+#endif
     output += "\"}";
     entry.close();
+//    isDir = false;
   }
   output += "]";
   HTTP.send(200, "text/json", output);
 }
+

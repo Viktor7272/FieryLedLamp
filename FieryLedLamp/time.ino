@@ -29,9 +29,52 @@ static CHSV dawnColor = CHSV(0, 0, 0);*/
 static CRGB dawnColor[6];
 
 static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
+#ifdef TM1637_USE
+uint8_t hours;
+uint8_t minu;
+#endif
 
 void timeTick()
 {
+    if (save_file_changes && millis() - timeout_save_file_changes >= SAVE_FILE_DELAY_TIMEOUT) {
+        //writeFile("config.json", configSetup );
+        //save_file_changes = 0;
+        switch (save_file_changes) {
+        case 1:
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 2:
+            save_alarms();
+            save_file_changes = 0;
+            break;
+        case 3:
+            save_alarms();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 4:
+            cycle_get();
+            save_file_changes = 0;
+            break;
+        case 5:
+            cycle_get();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        case 6:
+            cycle_get();
+            save_alarms();
+            save_file_changes = 0;
+            break;
+        case 7:
+            save_alarms();
+            cycle_get();
+            writeFile("config.json", configSetup );
+            save_file_changes = 0;
+            break;
+        }
+    }
   //if (espMode == 1U) // рассвет то должнен работать, если время лампа уже получила
   {
     if (timeTimer.isReady())
@@ -83,6 +126,9 @@ if (stillUseNTP)
       
       if (!timeSynched)                                                   // если время не было синхронизиировано ни разу, отключаем будильник до тех пор, пока оно не будет синхронизировано
       {
+#ifdef TM1637_USE
+        display.displayByte(_dash, _dash, _dash, _dash);                  // отображаем прочерки
+#endif
         return;
       }
 
@@ -97,6 +143,13 @@ if (stillUseNTP)
 
       printTime(thisTime, false, ONflag);                                 // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
 
+#ifdef TM1637_USE
+      if (minu != minute(currentLocalTime)) {
+        hours = hour(currentLocalTime);                   // получаем значение часов
+        minu = minute(currentLocalTime);                  // получаем значение минут
+        clockTicker_blink();
+      }
+#endif
       // проверка рассвета
       if (alarms[thisDay].State &&                                                                                          // день будильника
           thisTime >= (uint16_t)constrain(alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]), 0, (24 * 60)) &&    // позже начала
@@ -143,7 +196,13 @@ if (stillUseNTP)
           delay(1);
           FastLED.show();
           dawnFlag = true;
+#ifdef TM1637_USE
+          //blink_clock = true;
+#endif
         }
+#ifdef TM1637_USE
+        //else blink_clock = false;
+#endif
 
         #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
         if (thisTime == alarms[thisDay].Time)                             // установка, только в минуту, на которую заведён будильник
@@ -162,11 +221,17 @@ if (stillUseNTP)
         if (dawnFlag)
         {
           dawnFlag = false;
+          #ifdef TM1637_USE
+          clockTicker_blink();
+          #endif
           FastLED.clear();
           delay(2);
           FastLED.show();
           changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
+#ifdef TM1637_USE
+        //blink_clock = false;
+#endif
         manualOff = false;
         /* оптимизируем структуру данных и их обработчик
         dawnColorMinus1 = CHSV(0, 0, 0);
@@ -231,8 +296,6 @@ void getFormattedTime(char *buf)
   sprintf_P(buf, PSTR("%02u:%02u:%02u"), hour(currentLocalTime), minute(currentLocalTime), second(currentLocalTime));
 }
 
-#endif
-
 time_t getCurrentLocalTime()
 {
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
@@ -293,3 +356,65 @@ String Get_Time(time_t LocalTime) {
  Time = Time.substring(i - 2, i + 6); // Выделяем из строки 2 символа перед символом : и 6 символов после
  return Time; // Возврашаем полученное время
 }
+
+#ifdef TM1637_USE
+void clockTicker_blink()
+{
+  if (timeSynched) {  
+  
+  //tm1637_brightness ();
+  if (dawnFlag)  //если рассвет - мигаем  часами
+  {
+    if (millis() - tmr_blink > 100) {
+      tmr_blink = millis();
+      //tm1637_brightness ();
+      display.setBrightness((DispBrightness/51U)>4 ? 7 : DispBrightness/51U , DispBrightness);
+      display.displayClock(hours, minu);                         // выводим время функцией часов
+      if (DispBrightness >= 204) {
+        aDirection = false;
+        //DispBrightness = 7;
+      }
+      if (DispBrightness < 51U ) {
+        if (!DispBrightness)  DispBrightness=1;
+        aDirection = true;
+      }
+      if (aDirection) DispBrightness+=51U; else DispBrightness-=51U;
+    }
+  }
+  else {
+        tm1637_brightness ();
+        display.setBrightness((DispBrightness/51U)>4 ? 7 : DispBrightness/51U , DispBrightness);
+        display.displayClock(hours, minu);
+      } 
+  }    
+}
+
+void tm1637_brightness ()   {  // установка яркости в зависимости от  день/ночь
+
+  if (NIGHT_HOURS_START >= NIGHT_HOURS_STOP)                          // ночное время включает переход через полночь
+  {
+    if (thisTime >= NIGHT_HOURS_START || thisTime <= NIGHT_HOURS_STOP)   {  // период действия ночного времени
+       if (!NIGHT_HOURS_BRIGHTNESS)  DispBrightness = 0;
+       else  DispBrightness = NIGHT_HOURS_BRIGHTNESS;  //NIGHT_HOURS_BRIGHTNESS/32;
+    }
+    else   {
+      if (!DAY_HOURS_BRIGHTNESS) DispBrightness = 0;
+      else DispBrightness = DAY_HOURS_BRIGHTNESS;  //DAY_HOURS_BRIGHTNESS/32;
+    }
+  }
+  else                                                                // ночное время не включает переход через полночь
+  {
+    if (thisTime >= NIGHT_HOURS_START && thisTime <= NIGHT_HOURS_STOP)   {// период действия ночного времени
+       if (!NIGHT_HOURS_BRIGHTNESS)  DispBrightness = 0;
+       else  DispBrightness = NIGHT_HOURS_BRIGHTNESS;  //NIGHT_HOURS_BRIGHTNESS/32U;
+    }
+    else   {
+      if (!DAY_HOURS_BRIGHTNESS) DispBrightness = 0;
+      else DispBrightness = DAY_HOURS_BRIGHTNESS;  //DAY_HOURS_BRIGHTNESS/32U;
+    }
+  }
+}
+
+#endif
+
+#endif

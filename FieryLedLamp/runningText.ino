@@ -108,13 +108,42 @@ void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периоди�
     #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)        // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время вывода текста
     digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
     #endif
+    
+    #ifdef MP3_TX_PIN
+    first_entry = true;
+    advert_hour = true;
+    #endif  //MP3_TX_PIN
 
-    while (!fillString(stringTime, letterColor, false)) { delay(1); ESP.wdtFeed(); }
+    while (!fillString(stringTime, letterColor, false)) {
+        parseUDP();
+        delay (1);
+        #ifdef MP3_TX_PIN
+        if (day_night) {
+           if ((day_advert_sound_on && mp3_player_connect && !dawnFlag) || advert_flag) play_time_ADVERT();
+        }
+        else {
+           if ((night_advert_sound_on && mp3_player_connect && !dawnFlag) || advert_flag) play_time_ADVERT();
+        }
+        #endif  //MP3_TX_PIN
+        HTTP.handleClient();
+        #ifdef ESP_USE_BUTTON
+          buttonTick();
+        #endif
+        ESP.wdtFeed();
+    }
+    
+    #ifdef MP3_TX_PIN
+    while (advert_flag) {
+        play_time_ADVERT();
+        ESP.wdtFeed();
+    }
+    #endif  //MP3_TX_PIN
 
     #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)        // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
     digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
     #endif
 
+    FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
   }
 
@@ -122,15 +151,15 @@ void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периоди�
 }
 
 
-uint8_t getBrightnessForPrintTime(uint32_t thisTime, bool ONflag)     // определение яркости для вывода времени бегущей строкой в зависимости от ESP_MODE, USE_NTP, успешности синхронизации времени,
-                                                                      // текущего времени суток, настроек дневного/ночного времени и того, включена ли сейчас матрица
+uint8_t getBrightnessForPrintTime(uint32_t thisTime, bool ONflag)     // определение яркости для вывода времени бегущей строкой в зависимости от  успешности синхронизации времени,
+                                                                      // текущего времени суток, настроек дневного/ночного времени 
 {
-  //#if defined(USE_NTP) && defined(PRINT_TIME)
   #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
 
-  //if (espMode != 1U || !ntpServerAddressResolved || ONflag)
-  if (!timeSynched || ONflag)     // хз зачем было так сложно
+  //if (!timeSynched || ONflag)     // хз зачем было так сложно
+  if (!timeSynched)  
   {
+    day_night = false;
     return modes[currentMode].Brightness;
   }
 
@@ -138,27 +167,25 @@ uint8_t getBrightnessForPrintTime(uint32_t thisTime, bool ONflag)     // опр�
   {
     if (thisTime >= NIGHT_HOURS_START || thisTime <= NIGHT_HOURS_STOP)// период действия ночного времени
     {
-      return (NIGHT_HOURS_BRIGHTNESS >= 0)
-        ? NIGHT_HOURS_BRIGHTNESS
-        : modes[currentMode].Brightness;
+        day_night = false;
+        return NIGHT_HOURS_BRIGHTNESS;
     }
   }
   else                                                                // ночное время не включает переход через полночь
   {
     if (thisTime >= NIGHT_HOURS_START && thisTime <= NIGHT_HOURS_STOP)// период действия ночного времени
     {
-      return (NIGHT_HOURS_BRIGHTNESS >= 0)
-        ? NIGHT_HOURS_BRIGHTNESS
-        : modes[currentMode].Brightness;
+        day_night = false;
+        return NIGHT_HOURS_BRIGHTNESS;
     }
   }
 
-  return (DAY_HOURS_BRIGHTNESS >= 0)                                  // дневное время
-    ? DAY_HOURS_BRIGHTNESS
-    : modes[currentMode].Brightness;
+  day_night = true;
+  return DAY_HOURS_BRIGHTNESS;                                   // дневное время
 
   #endif
 
+  day_night = false;
   return modes[currentMode].Brightness;
 }
 

@@ -19,12 +19,24 @@ void buttonTick()
   // однократное нажатие
   if (clickCount == 1U)
   {
-    if (dawnFlag)
-    {
-      manualOff = true;
-      dawnFlag = false;
-      FastLED.setBrightness(modes[currentMode].Brightness);
-      changePower();
+    if (dawnFlag) {
+        #ifdef MP3_TX_PIN
+        if (alarm_sound_flag) {
+           myDFPlayer.stop();
+           alarm_sound_flag = false;
+        }
+        else
+        #endif  //MP3_TX_PIN
+        {
+            manualOff = true;
+            dawnFlag = false;
+            #ifdef TM1637_USE
+            clockTicker_blink();
+            #endif
+            FastLED.setBrightness(modes[currentMode].Brightness);
+            changePower();
+       }
+       return;
     }
     else
     {
@@ -33,7 +45,15 @@ void buttonTick()
       changePower();
     }
     settChanged = true;
-    eepromTimeout = millis();
+    save_file_changes = 7;
+    if (ONflag)  {
+        eepromTimeout = millis();
+        timeout_save_file_changes = millis();
+    }
+    else {
+        eepromTimeout = millis() - EEPROM_WRITE_DELAY;
+        timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
+    }
     loadingFlag = true;
 
     #if (USE_MQTT)
@@ -45,11 +65,30 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
   // двухкратное нажатие
-  if (ONflag && clickCount == 2U)
+  if (clickCount == 2U)
+     #ifdef MP3_TX_PIN
+     if (dawnFlag && alarm_sound_flag) {
+        myDFPlayer.stop();
+        alarm_sound_flag = false;
+        manualOff = true;
+        dawnFlag = false;
+        #ifdef TM1637_USE
+        clockTicker_blink();
+        #endif
+        FastLED.setBrightness(modes[currentMode].Brightness);
+        changePower();
+       }
+       else
+       #endif  //MP3_TX_PIN
+      
+  if (ONflag)    
   {
     if (Favorit_only)
 	{
@@ -86,6 +125,9 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
@@ -127,12 +169,17 @@ void buttonTick()
     #ifdef USE_BLYNK
     updateRemoteBlynkParams();
     #endif
+    #ifdef USE_MULTIPLE_LAMPS_CONTROL
+    multiple_lamp_control ();
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL
   }
 
 
   // четырёхкратное нажатие
   if (clickCount == 4U)
   {
+  
+	//bool ota = false;
     #ifdef OTA
     if (otaManager.RequestOtaUpdate())
     {
@@ -146,8 +193,29 @@ void buttonTick()
       //FastLED.clear();
       //delay(1);
       changePower();
+	  //ota = true;
     }
+    else
     #endif
+	
+	#ifdef BUTTON_CAN_SET_SLEEP_TIMER
+	//if (!ota)
+	{
+    // мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+    showWarning(CRGB::Blue, 1000, 250U);                    // мигание синим цветом 1 секунду
+    ONflag = true;
+    changePower();
+	jsonWrite(configSetup, "Power", ONflag);
+    settChanged = true;
+    eepromTimeout = millis();
+    #ifdef USE_BLYNK
+    updateRemoteBlynkParams();
+    #endif
+    TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER1 * 60UL * 1000UL;
+    TimerManager::TimerRunning = true;
+	}
+    #endif //BUTTON_CAN_SET_SLEEP_TIMER	
+    ;
   }
 
 
@@ -200,6 +268,34 @@ void buttonTick()
     ESP.restart();
   }
 
+  #ifdef MP3_TX_PIN
+  // Восьмикратное нажатие
+  if (clickCount == 8U)  {                // Вкл / Откл звука
+    if (mp3_player_connect) {
+      if (eff_sound_on) {
+        eff_sound_on = 0;
+        showWarning(CRGB::Yellow, 1000, 250U);                    // мигание желтым цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("Звук выключен"));
+        #endif
+      }
+      else {
+        eff_sound_on = eff_volume;
+        showWarning(CRGB::Blue, 1000, 250U);                    // мигание синим цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("Звук включен"));
+        #endif
+      }
+    }
+    else  {
+        showWarning(CRGB::Red, 1000, 250U);                    // мигание красным цветом 1 секунду
+        #ifdef GENERAL_DEBUG
+        LOG.println (F("mp3 player не подключен"));
+        #endif
+    }
+    jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
+  }
+  #endif  //MP3_TX_PIN
 
   // кнопка только начала удерживаться
   //if (ONflag && touch.isHolded())
@@ -217,7 +313,7 @@ if (touch.isStep())
   {
 
     int8_t but = touch.getHoldClicks();
-        Serial.println (but);
+        //Serial.println (but);
 
     switch (but )
     {
@@ -237,6 +333,9 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }
@@ -250,6 +349,9 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }
@@ -263,9 +365,32 @@ if (touch.isStep())
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Новое значение масштаба: %d\n"), modes[currentMode].Scale);
         #endif
+        #ifdef USE_MULTIPLE_LAMPS_CONTROL
+        multiple_lamp_control ();
+        #endif  //USE_MULTIPLE_LAMPS_CONTROL
 
         break;
       }
+	  
+	    #ifdef BUTTON_CAN_SET_SLEEP_TIMER
+	  case 3U:
+	  {
+		Button_Holding = true;
+		// мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+		showWarning(CRGB::Blue, 1500U, 250U);                    // мигание синим цветом 1 секунду
+		ONflag = true;
+		changePower();
+		jsonWrite(configSetup, "Power", ONflag);
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER2 * 60UL * 1000UL;
+		TimerManager::TimerRunning = true;
+		break;
+	  }
+		#endif //BUTTON_CAN_SET_SLEEP_TIMER
 
       default:
         break;
@@ -276,22 +401,51 @@ if (touch.isStep())
   }
   else
   {
-  if (!Button_Holding) {
-    Button_Holding = true;
-    currentMode = EFF_WHITE_COLOR;
-	jsonWrite(configSetup, "eff_sel", currentMode);
-	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
-    jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-    jsonWrite(configSetup, "sc", modes[currentMode].Scale);
-    ONflag = true;
-	jsonWrite(configSetup, "Power", ONflag);
-    changePower();
-    settChanged = true;
-    eepromTimeout = millis();
-    #ifdef USE_BLYNK
-    updateRemoteBlynkParams();
-    #endif
-    }
+  if (!Button_Holding ) {
+    int8_t but = touch.getHoldClicks();
+        //Serial.println (but);
+
+    switch (but )
+    {
+      case 0U:                                              // просто удержание (до удержания кнопки кликов не было) - белый свет
+	  {
+		Button_Holding = true;
+		currentMode = EFF_WHITE_COLOR;
+		jsonWrite(configSetup, "eff_sel", currentMode);
+		jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+		jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+		jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+		ONflag = true;
+		jsonWrite(configSetup, "Power", ONflag);
+		changePower();
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		break;
+	  }
+	    #ifdef BUTTON_CAN_SET_SLEEP_TIMER	  
+	  case 3U:
+	  {
+		Button_Holding = true;
+		// мигать об успехе операции лучше до вызова changePower(), иначе сперва мелькнут кадры текущего эффекта
+		showWarning(CRGB::Blue, 1500U, 250U);                    // мигание синим цветом 1 секунду
+		ONflag = true;
+		changePower();
+		jsonWrite(configSetup, "Power", ONflag);
+		settChanged = true;
+		eepromTimeout = millis();
+		#ifdef USE_BLYNK
+		updateRemoteBlynkParams();
+		#endif
+		TimerManager::TimeToFire = millis() + BUTTON_SET_SLEEP_TIMER2 * 60UL * 1000UL;
+		TimerManager::TimerRunning = true;
+		break;		
+	  }
+		#endif //BUTTON_CAN_SET_SLEEP_TIMER	  
+	}
+   }
   }
 
   // кнопка отпущена после удерживания
