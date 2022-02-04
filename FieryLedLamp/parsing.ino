@@ -145,7 +145,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       //if (((uint8_t)atoi(buff) => 0) && ((uint8_t)atoi(buff) < 31)) cmdbuf[6] = (byte)atoi(buff);
       //else cmdbuf[6] =0x0A;
       
-      myDFPlayer.volume(eff_volume);
+      send_command(6,0,0,eff_volume);
       jsonWrite(configSetup, "vol", eff_volume);
       jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
       

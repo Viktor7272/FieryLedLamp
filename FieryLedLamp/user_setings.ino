@@ -932,7 +932,7 @@ void handle_on_sound ()   {
 void handle_volume ()   {
     eff_volume = HTTP.arg("vol").toInt();
     jsonWrite(configSetup, "vol", eff_volume);
-    if (!dawnflag_sound) myDFPlayer.volume(eff_volume);
+    if (!dawnflag_sound) send_command(6,0,0,eff_volume); //Громкость
     timeout_save_file_changes = millis();
     bitSet (save_file_changes, 0);
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
@@ -949,7 +949,7 @@ void handle_alarm_on_sound ()   {
 void handle_alarm_volume ()   {
     alarm_volume = HTTP.arg("alm_vol").toInt();
     jsonWrite(configSetup, "alm_vol", alarm_volume);
-    if (dawnflag_sound && alarm_sound_on) myDFPlayer.volume(alarm_volume);
+    if (dawnflag_sound && alarm_sound_on) send_command(6,0,0,alarm_volume); //Громкость
     timeout_save_file_changes = millis();
     bitSet (save_file_changes, 0);
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
@@ -974,7 +974,7 @@ void handle_night_advert_on_sound ()   {
 void handle_day_advert_volume ()   {
     day_advert_volume = HTTP.arg("day_vol").toInt();
     jsonWrite(configSetup, "day_vol", day_advert_volume);
-    if (advert_flag && day_advert_sound_on) myDFPlayer.volume(day_advert_volume);
+    if (advert_flag && day_advert_sound_on) send_command(6,0,0,day_advert_volume); //Громкость
     timeout_save_file_changes = millis();
     bitSet (save_file_changes, 0);
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
@@ -983,7 +983,7 @@ void handle_day_advert_volume ()   {
 void handle_night_advert_volume ()   {
     night_advert_volume = HTTP.arg("night_vol").toInt();
     jsonWrite(configSetup, "night_vol", night_advert_volume);
-    if (advert_flag && night_advert_sound_on) myDFPlayer.volume(night_advert_volume);
+    if (advert_flag && night_advert_sound_on) send_command(6,0,0,night_advert_volume); //Громкость
     timeout_save_file_changes = millis();
     bitSet (save_file_changes, 0);
     HTTP.send(200, "application/json", "{\"should_refresh\": \"true\"}");
@@ -1007,7 +1007,7 @@ bool FileCopy (String SourceFile , String TargetFile)   {
 void EffectList (String efflist )   {
     //String EffList;
     File R_File = SPIFFS.open ( efflist, "r" );
-    if (!R_File) Serial.println (F("Ошибка. Файл списка эффектов для передачи приложению не найден!"));
+    if (!R_File) LOG.println (F("Ошибка. Файл списка эффектов для передачи приложению не найден!"));
     String EffList = R_File.readString();
     #ifdef GENERAL_DEBUG
     LOG.print (F("EffList = "));
