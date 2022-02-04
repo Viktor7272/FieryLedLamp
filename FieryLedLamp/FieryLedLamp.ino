@@ -74,7 +74,7 @@
 #endif
 #ifdef MP3_TX_PIN
 #include <SoftwareSerial.h>                  // Подключаем библиотеку для работы с последовательным интерфейсом
-#include <DFRobotDFPlayerMini.h>             // Подключаем библиотеку для работы с плеером
+//#include <DFRobotDFPlayerMini.h>             // Подключаем библиотеку для работы с плеером
 #endif  //MP3_TX_PIN
 
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
@@ -199,7 +199,8 @@ uint8_t PRINT_TIME ;
 uint8_t day_night = false;     // если день - true, ночь - false
 uint8_t save_file_changes =0;
 uint32_t timeout_save_file_changes;
-bool first_entry = false;
+uint8_t first_entry = 0;
+uint16_t dawnPosition;
 #define SAVE_FILE_DELAY_TIMEOUT  15000UL
 
 #ifdef USE_MULTIPLE_LAMPS_CONTROL
@@ -209,31 +210,35 @@ uint8_t ml1, ml2, ml3;
 #endif //USE_MULTIPLE_LAMPS_CONTROL
 
 #ifdef MP3_TX_PIN
+#define mp3_delay 75                 // Задержка между командами плееру
 uint8_t alarm_sound_on =false;       // Включить/выключить звук будильника
 uint8_t alarm_volume;                // Громкость будильника
 bool alarm_sound_flag =false;        // проигрывается ли сейчас будильник
 uint8_t dawnflag_sound = false;      // Звук не начал обслуживание рассвета. Если не true - звук обслуживает рассвет
-uint8_t tmp_fold;
+//uint8_t tmp_fold;
 bool advert_flag = false;            // Озвучивается время
-bool advert_hour;                    // Щзвучиваются часы времени
+bool advert_hour;                    // Озвучиваются часы времени
 uint8_t day_advert_volume;           // Дневная Громкость озвучивания времени
-uint8_t night_advert_volume;          // Ночная Громкость озвучивания времени
+uint8_t night_advert_volume;         // Ночная Громкость озвучивания времени
 bool day_advert_sound_on;            // Вкл.Выкл озвучивания времени днём
 bool night_advert_sound_on;          // Вкл.Выкл озвучивания времени ночью
-bool mp3_player_connect = false; // Плеер не подключен. true - подключен.
-uint8_t mp3_folder_last=0;       // Предыдущая папка для воспроизведения
-bool mp3_play_now=false;         // Указывает, играет ли сейчас мелодия
-bool set_mp3_play_now=false;     // Указывает, надо ли играть сейчас мелодии
+uint8_t mp3_player_connect = 0;      // Плеер не подключен. true - подключен.
+uint8_t mp3_folder_last=255;           // Предыдущая папка для воспроизведения
+bool set_mp3_play_now=false;         // Указывает, надо ли играть сейчас мелодии
+//bool mp3_play_now=false;           // Указывает, играет ли сейчас мелодия
 //uint8_t eff_volume_tmp = 0;
 //uint8_t day_volum;
 //uint8_t night_volum;
-bool pause_on = true;                        // Озвучка эффектов на паузе. false - на паузе
-uint8_t eff_volume = 9;                       // громкость воспроизведения
-uint8_t eff_sound_on = 0;                        // звук включен - !0 (true), выключен - 0
+uint32_t alarm_timer;                // Периодичность проверки и плавного изменения громкости будильника
+uint32_t mp3_timer = 0;
+bool mp3_stop = true;                       // Озвучка эффектов остановлена
+bool pause_on = true;                        // Озвучка эффектов на паузе. false - не на паузе
+uint8_t eff_volume = 9;                      // громкость воспроизведения
+uint8_t eff_sound_on = 0;                    // звук включен - !0 (true), выключен - 0
 SoftwareSerial mp3(MP3_RX_PIN, MP3_TX_PIN);  // создаём объект mySoftwareSerial и указываем выводы, к которым подлючен плеер (RX, TX)
-DFRobotDFPlayerMini myDFPlayer;
+//DFRobotDFPlayerMini myDFPlayer;
 //uint32_t timerss = 0;
-//uint8_t cmdbuf[8] = {0x7E, 0xFF, 06, 0x06, 00, 00, 00, 0xEF};
+uint8_t mp3_receive_buf[10];
 #endif  //MP3_TX_PIN
 
 #ifdef TM1637_USE
@@ -251,7 +256,7 @@ void setup()  //================================================================
 {
 	
   Serial.begin(115200);
-  Serial.println();
+  LOG.println();
   ESP.wdtEnable(WDTO_8S);
 
   // часы
@@ -423,9 +428,9 @@ void setup()  //================================================================
   jsonWrite(configSetup, "sp", modes[currentMode].Speed);
   jsonWrite(configSetup, "sc", modes[currentMode].Scale); 
   //sendAlarms(inputBuffer);                                                 // Чтение настроек будильника при старте лампы
-  first_entry = true;
+  first_entry = 1;
   handle_alarm ();
-  first_entry = false;
+  first_entry = 0;
   jsonWrite(configSetup, "cycle_on", FavoritesManager::FavoritesRunning);  // чтение состояния настроек режима Цикл 
   jsonWrite(configSetup, "time_eff", FavoritesManager::Interval);          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
   jsonWrite(configSetup, "disp", FavoritesManager::Dispersion);
@@ -433,9 +438,9 @@ void setup()  //================================================================
   jsonWrite(configSetup, "tmr", 0);
   jsonWrite(configSetup, "button_on", buttonEnabled);
   //cycle_get ();
-  first_entry = true;
+  first_entry = 1;
   handle_cycle_set();  // чтение выбранных эффектов
-  first_entry = false;
+  first_entry = 0;
 #ifdef USE_MULTIPLE_LAMPS_CONTROL  
   multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
 #endif //USE_MULTIPLE_LAMPS_CONTROL
@@ -550,8 +555,11 @@ void setup()  //================================================================
   loadingFlag = true;
   
   #ifdef MP3_TX_PIN
+   mp3.begin(9600);
    LOG.println ("Старт mp3 player");
-   mp3_setup();
+   //mp3_setup();
+   mp3_timer = millis();
+   mp3_player_connect = 1;
   #endif 
 
   //TextTicker = RUNNING_TEXT_DEFAULT;
@@ -633,7 +641,7 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
   parseUDP();
   yield();
   #ifdef TM1637_USE
-    if (millis() - tmr_clock > 1000) {       // каждую секунду изменяем
+    if (millis() - tmr_clock > 1000UL) {       // каждую секунду изменяем
       tmr_clock = millis();                  // обновляем значение счетчика
       dotFlag = !dotFlag;                    // инверсия флага
       display.point(dotFlag);                // выкл/выкл двоеточия
@@ -643,8 +651,20 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
     }
   #endif  //TM1637_USE
   #ifdef MP3_TX_PIN
-  if (mp3_player_connect) 
-    mp3_loop();
+  switch (mp3_player_connect){
+      case 0: break;
+      case 1: if (millis() - mp3_timer > 10000UL || (read_command() == 0x3F)){  //if (millis() - mp3_timer > 5000) {
+                 first_entry = 5;
+                 mp3_timer = millis();
+                 mp3_setup ();
+                }
+              break;
+      case 2: if ((millis() - mp3_timer > 5000UL) || (read_command() == 0x3F)) mp3_player_connect = 3;
+              break;
+      case 3: mp3_setup(); break;
+      case 4: mp3_loop(); break;
+      }
+                    
   #endif
 
  if (Painting == 0) {

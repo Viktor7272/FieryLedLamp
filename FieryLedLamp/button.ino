@@ -22,7 +22,9 @@ void buttonTick()
     if (dawnFlag) {
         #ifdef MP3_TX_PIN
         if (alarm_sound_flag) {
-           myDFPlayer.stop();
+           //myDFPlayer.pause();
+           send_command(0x0E,0,0,0); //Пауза
+           mp3_stop = true;
            alarm_sound_flag = false;
         }
         else
@@ -75,7 +77,9 @@ void buttonTick()
   if (clickCount == 2U)
      #ifdef MP3_TX_PIN
      if (dawnFlag && alarm_sound_flag) {
-        myDFPlayer.stop();
+        //myDFPlayer.pause();
+        send_command(0x0E,0,0,0);  //Пауза
+        mp3_stop = true;
         alarm_sound_flag = false;
         manualOff = true;
         dawnFlag = false;
@@ -271,7 +275,7 @@ void buttonTick()
   #ifdef MP3_TX_PIN
   // Восьмикратное нажатие
   if (clickCount == 8U)  {                // Вкл / Откл звука
-    if (mp3_player_connect) {
+    if (mp3_player_connect == 4) {
       if (eff_sound_on) {
         eff_sound_on = 0;
         showWarning(CRGB::Yellow, 1000, 250U);                    // мигание желтым цветом 1 секунду

@@ -148,6 +148,24 @@ if (stillUseNTP)
         hours = hour(currentLocalTime);                   // получаем значение часов
         minu = minute(currentLocalTime);                  // получаем значение минут
         clockTicker_blink();
+        
+    #ifdef MP3_TX_PIN
+    if (dawnFlag && dawnPosition >= 245) {
+        //Serial.println ("Alarm");
+        first_entry = 1;
+        advert_hour = true;
+        play_time_ADVERT();
+        while (advert_flag) {
+           play_time_ADVERT();
+           ESP.wdtFeed();
+        }
+    }
+    #endif  //MP3_TX_PIN
+        #ifdef MP3_TX_PIN
+              if (dawnFlag && dawnPosition == 255) {
+                  printTime(thisTime, true, ONflag);
+            }
+        #endif  //MP3_TX_PIN
       }
 #endif
       // проверка рассвета
@@ -158,7 +176,7 @@ if (stillUseNTP)
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
           // величина рассвета 0-255
-          int32_t dawnPosition = 255 * ((float)(thisFullTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) * 60) / (pgm_read_byte(&dawnOffsets[dawnMode]) * 60));
+          dawnPosition = (uint16_t) (255 * ((float)(thisFullTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) * 60) / (pgm_read_byte(&dawnOffsets[dawnMode]) * 60)));
           dawnPosition = constrain(dawnPosition, 0, 255);
           /* оптимизируем структуру данных и их обработчик
           dawnColorMinus5 = dawnCounter > 4 ? dawnColorMinus4 : dawnColorMinus5;

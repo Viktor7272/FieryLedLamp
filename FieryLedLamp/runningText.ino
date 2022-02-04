@@ -110,7 +110,7 @@ void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периоди�
     #endif
     
     #ifdef MP3_TX_PIN
-    first_entry = true;
+    first_entry = 1;
     advert_hour = true;
     #endif  //MP3_TX_PIN
 
@@ -119,10 +119,10 @@ void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периоди�
         delay (1);
         #ifdef MP3_TX_PIN
         if (day_night) {
-           if ((day_advert_sound_on && mp3_player_connect && !dawnFlag) || advert_flag) play_time_ADVERT();
+           if ((day_advert_sound_on && mp3_player_connect == 4 && (!dawnFlag)) || advert_flag) play_time_ADVERT();
         }
         else {
-           if ((night_advert_sound_on && mp3_player_connect && !dawnFlag) || advert_flag) play_time_ADVERT();
+           if ((night_advert_sound_on && mp3_player_connect == 4 && (!dawnFlag)) || advert_flag) play_time_ADVERT();
         }
         #endif  //MP3_TX_PIN
         HTTP.handleClient();
