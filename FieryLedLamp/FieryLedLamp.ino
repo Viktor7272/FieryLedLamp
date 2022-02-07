@@ -210,7 +210,7 @@ uint8_t ml1, ml2, ml3;
 #endif //USE_MULTIPLE_LAMPS_CONTROL
 
 #ifdef MP3_TX_PIN
-#define mp3_delay 75                 // Задержка между командами плееру
+#define mp3_delay 100                // Задержка между командами плееру
 uint8_t alarm_sound_on =false;       // Включить/выключить звук будильника
 uint8_t alarm_volume;                // Громкость будильника
 bool alarm_sound_flag =false;        // проигрывается ли сейчас будильник
@@ -223,7 +223,7 @@ uint8_t night_advert_volume;         // Ночная Громкость озву
 bool day_advert_sound_on;            // Вкл.Выкл озвучивания времени днём
 bool night_advert_sound_on;          // Вкл.Выкл озвучивания времени ночью
 uint8_t mp3_player_connect = 0;      // Плеер не подключен. true - подключен.
-uint8_t mp3_folder_last=255;           // Предыдущая папка для воспроизведения
+uint8_t mp3_folder_last=255;         // Предыдущая папка для воспроизведения
 bool set_mp3_play_now=false;         // Указывает, надо ли играть сейчас мелодии
 //bool mp3_play_now=false;           // Указывает, играет ли сейчас мелодия
 //uint8_t eff_volume_tmp = 0;
@@ -246,7 +246,6 @@ uint8_t DispBrightness = 1;          // +++ Яркость дисплея от 0
 bool dotFlag = false;                // +++ флаг: в часах рисуется двоеточие или нет
 uint32_t tmr_clock = 0;              // +++ таймер мигания разделителя часов на дисплее
 uint32_t tmr_blink = 0;              // +++ таймер плавного изменения яркости дисплея
-//bool blink_clock = false;            // +++ флаг: false-запрещает плавное изменение яркости дисплея, true-разрешает плавное изменение яркости дисплея
 TM1637Display display(CLK, DIO);     // +++ подключаем дисплей
 bool aDirection = false;             // +++ Направление изменения яркрсти
 #endif  //TM1637_USE
